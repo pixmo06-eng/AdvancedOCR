@@ -1,0 +1,21 @@
+# Xcode
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdatad
+*.ninja
+.build/
+Packages/
+
+# Swift Package Manager
+Packages/
+Package.resolved
+.swiftpm/xcode/xcuserdata/
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+
+# Temporary / OS files
+*.swp
+*.bak
+*~
