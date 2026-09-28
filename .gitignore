@@ -7,10 +7,8 @@ project.xcworkspace/xcuserdata/
 *.xcuserdatad
 *.ninja
 .build/
-Packages/
 
 # Swift Package Manager
-Packages/
 Package.resolved
 .swiftpm/xcode/xcuserdata/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
