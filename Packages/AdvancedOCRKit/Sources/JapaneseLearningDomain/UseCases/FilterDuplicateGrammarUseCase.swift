@@ -32,6 +32,8 @@ public final class FilterDuplicateGrammarUseCase: FilterDuplicateGrammarUseCaseP
     ) {
         if var existing = existingDict[candidate.pattern] {
             existing.occurrenceCount += 1
+            if existing.category == nil { existing.category = candidate.category }
+            if existing.pageCode == nil { existing.pageCode = candidate.pageCode }
             existingDict[candidate.pattern] = existing
             return
         }

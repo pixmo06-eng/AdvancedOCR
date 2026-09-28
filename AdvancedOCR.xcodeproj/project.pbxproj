@@ -18,7 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1EB7EA131BFEFF8396256AEC /* AdvancedOCR.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AdvancedOCR.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1EB7EA131BFEFF8396256AEC /* AdvancedOCR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AdvancedOCR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		824B55CF088AAF19C62CC9CC /* AdvancedOCRApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedOCRApp.swift; sourceTree = "<group>"; };
 		F7F1BF2270006378467E33BC /* AdvancedOCRKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AdvancedOCRKit; path = Packages/AdvancedOCRKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -110,8 +110,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = C5F8DB62630732ECE3728277 /* Build configuration list for PBXProject "AdvancedOCR" */;
 			developmentRegion = en;
@@ -153,6 +151,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3NR3ZN5R55;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan Japanese lesson documents and extract text.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import lesson photos.";
@@ -232,6 +231,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3NR3ZN5R55;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan Japanese lesson documents and extract text.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import lesson photos.";

@@ -47,7 +47,8 @@ public final class LessonListViewModel {
         do {
             let pages = try await performOCROnPages(pagesData: pagesData)
             statusMessage = "Analyzing vocabulary & grammar with AI..."
-            let initialLesson = Lesson(title: title.isEmpty ? "Lesson \(lessons.count + 1)" : title, pages: pages)
+            let finalTitle = resolveLessonTitle(givenTitle: title, pages: pages)
+            let initialLesson = Lesson(title: finalTitle, pages: pages)
             let analyzedLesson = try await analyzeLessonUseCase.execute(lesson: initialLesson)
             lessons.insert(analyzedLesson, at: 0)
             vocabularyList = try await repository.fetchAllVocabulary()
@@ -71,11 +72,36 @@ public final class LessonListViewModel {
 
     private func performOCROnPages(pagesData: [Data]) async throws -> [LessonPage] {
         var pages: [LessonPage] = []
+        var activeCategory: String? = nil
+        let parser = LessonHeaderParser()
+
         for (index, data) in pagesData.enumerated() {
             let scanResult = try await ocrService.recognizeText(from: data)
-            let page = LessonPage(pageIndex: index, imageData: data, extractedText: scanResult.fullText)
+            let header = parser.parse(text: scanResult.fullText, fallbackIndex: index, currentCategory: activeCategory)
+            if let detected = header.category {
+                activeCategory = detected
+            }
+            let page = LessonPage(
+                pageIndex: index,
+                imageData: data,
+                extractedText: scanResult.fullText,
+                pageCode: header.pageCode,
+                category: header.category ?? "General",
+                title: header.title
+            )
             pages.append(page)
         }
         return pages
+    }
+
+    private func resolveLessonTitle(givenTitle: String, pages: [LessonPage]) -> String {
+        let trimmed = givenTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            return trimmed
+        }
+        if let firstCategory = pages.compactMap({ $0.category }).first(where: { $0 != "General" }) {
+            return firstCategory
+        }
+        return "Lesson \(lessons.count + 1)"
     }
 }

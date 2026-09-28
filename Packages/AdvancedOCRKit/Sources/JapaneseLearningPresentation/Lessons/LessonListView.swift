@@ -53,7 +53,11 @@ public struct LessonListView: View {
     private var lessonsList: some View {
         List {
             ForEach(viewModel.lessons) { lesson in
-                NavigationLink(destination: BookReaderView(lesson: lesson)) {
+                NavigationLink(destination: BookReaderView(
+                    lesson: lesson,
+                    allVocabulary: viewModel.vocabularyList,
+                    allGrammar: viewModel.grammarList
+                )) {
                     lessonRow(lesson: lesson)
                 }
             }

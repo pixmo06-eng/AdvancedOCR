@@ -5,16 +5,25 @@ public struct LessonPage: Identifiable, Codable, Sendable, Equatable {
     public let pageIndex: Int
     public let imageData: Data
     public var extractedText: String
+    public var pageCode: String
+    public var category: String
+    public var title: String
 
     public init(
         id: UUID = UUID(),
         pageIndex: Int,
         imageData: Data,
-        extractedText: String = ""
+        extractedText: String = "",
+        pageCode: String = "",
+        category: String = "General",
+        title: String = ""
     ) {
         self.id = id
         self.pageIndex = pageIndex
         self.imageData = imageData
         self.extractedText = extractedText
+        self.pageCode = pageCode.isEmpty ? "Page \(pageIndex + 1)" : pageCode
+        self.category = category
+        self.title = title.isEmpty ? self.pageCode : title
     }
 }

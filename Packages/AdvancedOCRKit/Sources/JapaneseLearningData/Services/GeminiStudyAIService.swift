@@ -19,23 +19,36 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
 
     public func extractStudyContent(
         from text: String,
-        lessonId: UUID
+        lessonId: UUID,
+        pageId: UUID? = nil,
+        pageCode: String? = nil,
+        category: String? = nil
     ) async throws -> ExtractedStudyContent {
         guard let apiKey = apiKeyProvider(), !apiKey.isEmpty else {
-            return fallbackOfflineContent(from: text, lessonId: lessonId)
+            return fallbackOfflineContent(from: text, lessonId: lessonId, pageId: pageId, pageCode: pageCode, category: category)
         }
 
         do {
-            return try await requestGeminiContent(text: text, apiKey: apiKey, lessonId: lessonId)
+            return try await requestGeminiContent(
+                text: text,
+                apiKey: apiKey,
+                lessonId: lessonId,
+                pageId: pageId,
+                pageCode: pageCode,
+                category: category
+            )
         } catch {
-            return fallbackOfflineContent(from: text, lessonId: lessonId)
+            return fallbackOfflineContent(from: text, lessonId: lessonId, pageId: pageId, pageCode: pageCode, category: category)
         }
     }
 
     private func requestGeminiContent(
         text: String,
         apiKey: String,
-        lessonId: UUID
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
     ) async throws -> ExtractedStudyContent {
         let url = try buildURL(apiKey: apiKey)
         var request = URLRequest(url: url)
@@ -48,7 +61,13 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
             throw AppError.ocrRecognitionFailed("Gemini API request failed")
         }
 
-        return try parseGeminiResponse(data: data, lessonId: lessonId)
+        return try parseGeminiResponse(
+            data: data,
+            lessonId: lessonId,
+            pageId: pageId,
+            pageCode: pageCode,
+            category: category
+        )
     }
 
     private func buildURL(apiKey: String) throws -> URL {
@@ -79,7 +98,13 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
         return try JSONSerialization.data(withJSONObject: payload)
     }
 
-    private func parseGeminiResponse(data: Data, lessonId: UUID) throws -> ExtractedStudyContent {
+    private func parseGeminiResponse(
+        data: Data,
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
+    ) throws -> ExtractedStudyContent {
         let root = try JSONDecoder().decode(GeminiResponseDTO.self, from: data)
         guard let jsonString = root.candidates?.first?.content?.parts?.first?.text,
               let jsonData = jsonString.data(using: .utf8) else {
@@ -87,18 +112,46 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
         }
 
         let studyDTO = try JSONDecoder().decode(StudyContentDTO.self, from: jsonData)
-        let vocab = studyDTO.vocabulary.map { $0.toDomain(lessonId: lessonId) }
-        let grammar = studyDTO.grammar.map { $0.toDomain(lessonId: lessonId) }
+        let vocab = studyDTO.vocabulary.map {
+            $0.toDomain(lessonId: lessonId, pageId: pageId, pageCode: pageCode, category: category)
+        }
+        let grammar = studyDTO.grammar.map {
+            $0.toDomain(lessonId: lessonId, pageId: pageId, pageCode: pageCode, category: category)
+        }
         return ExtractedStudyContent(vocabulary: vocab, grammar: grammar)
     }
 
-    private func fallbackOfflineContent(from text: String, lessonId: UUID) -> ExtractedStudyContent {
-        let words = nlpService.extractTokens(from: text)
-        let sampleGrammar = detectBasicGrammar(in: text, lessonId: lessonId)
+    private func fallbackOfflineContent(
+        from text: String,
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
+    ) -> ExtractedStudyContent {
+        let words = nlpService.extractTokens(from: text).map { word -> VocabularyItem in
+            var updated = word
+            updated.pageId = pageId
+            updated.pageCode = pageCode
+            updated.category = category
+            return updated
+        }
+        let sampleGrammar = detectBasicGrammar(
+            in: text,
+            lessonId: lessonId,
+            pageId: pageId,
+            pageCode: pageCode,
+            category: category
+        )
         return ExtractedStudyContent(vocabulary: words, grammar: sampleGrammar)
     }
 
-    private func detectBasicGrammar(in text: String, lessonId: UUID) -> [GrammarItem] {
+    private func detectBasicGrammar(
+        in text: String,
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
+    ) -> [GrammarItem] {
         var items: [GrammarItem] = []
         let patterns: [(pattern: String, meaning: String, formation: String, explanation: String)] = [
             ("〜てください", "Please do", "Te-form + ください", "Used to make polite requests in daily life."),
@@ -122,7 +175,10 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
                 formation: item.formation,
                 explanation: item.explanation,
                 examples: [example],
-                lessonId: lessonId
+                lessonId: lessonId,
+                pageId: pageId,
+                pageCode: pageCode,
+                category: category
             ))
         }
         return items
@@ -161,7 +217,12 @@ struct VocabDTO: Codable {
     let exampleEnglish: String?
     let scenario: String?
 
-    func toDomain(lessonId: UUID) -> VocabularyItem {
+    func toDomain(
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
+    ) -> VocabularyItem {
         let example = DailyLifeExample(
             japanese: exampleJapanese ?? word,
             reading: exampleReading ?? reading,
@@ -175,7 +236,10 @@ struct VocabDTO: Codable {
             jlptLevel: jlptLevel,
             isNewWord: true,
             examples: [example],
-            firstLessonId: lessonId
+            firstLessonId: lessonId,
+            pageId: pageId,
+            pageCode: pageCode,
+            category: category
         )
     }
 }
@@ -191,7 +255,12 @@ struct GrammarDTO: Codable {
     let exampleEnglish: String?
     let scenario: String?
 
-    func toDomain(lessonId: UUID) -> GrammarItem {
+    func toDomain(
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
+    ) -> GrammarItem {
         let example = DailyLifeExample(
             japanese: exampleJapanese ?? pattern,
             reading: exampleReading ?? "",
@@ -206,7 +275,10 @@ struct GrammarDTO: Codable {
             jlptLevel: jlptLevel,
             isNewGrammar: true,
             examples: [example],
-            lessonId: lessonId
+            lessonId: lessonId,
+            pageId: pageId,
+            pageCode: pageCode,
+            category: category
         )
     }
 }

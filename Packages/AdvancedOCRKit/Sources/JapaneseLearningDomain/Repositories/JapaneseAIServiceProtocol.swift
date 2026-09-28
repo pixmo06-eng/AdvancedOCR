@@ -13,6 +13,9 @@ public struct ExtractedStudyContent: Sendable {
 public protocol JapaneseAIServiceProtocol: Sendable {
     func extractStudyContent(
         from text: String,
-        lessonId: UUID
+        lessonId: UUID,
+        pageId: UUID?,
+        pageCode: String?,
+        category: String?
     ) async throws -> ExtractedStudyContent
 }

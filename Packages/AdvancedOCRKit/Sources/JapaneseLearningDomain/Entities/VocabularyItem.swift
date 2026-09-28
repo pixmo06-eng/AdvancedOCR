@@ -18,6 +18,9 @@ public struct VocabularyItem: Identifiable, Codable, Sendable, Equatable {
     public var masteryStatus: MasteryStatus
     public let examples: [DailyLifeExample]
     public let firstLessonId: UUID?
+    public var pageId: UUID?
+    public var pageCode: String?
+    public var category: String?
     public let createdAt: Date
 
     public init(
@@ -32,6 +35,9 @@ public struct VocabularyItem: Identifiable, Codable, Sendable, Equatable {
         masteryStatus: MasteryStatus = .newWord,
         examples: [DailyLifeExample] = [],
         firstLessonId: UUID? = nil,
+        pageId: UUID? = nil,
+        pageCode: String? = nil,
+        category: String? = nil,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -45,6 +51,9 @@ public struct VocabularyItem: Identifiable, Codable, Sendable, Equatable {
         self.masteryStatus = masteryStatus
         self.examples = examples
         self.firstLessonId = firstLessonId
+        self.pageId = pageId
+        self.pageCode = pageCode
+        self.category = category
         self.createdAt = createdAt
     }
 }

@@ -32,6 +32,8 @@ public final class FilterDuplicateVocabularyUseCase: FilterDuplicateVocabularyUs
     ) {
         if var existing = existingDict[candidate.word] {
             existing.occurrenceCount += 1
+            if existing.category == nil { existing.category = candidate.category }
+            if existing.pageCode == nil { existing.pageCode = candidate.pageCode }
             existingDict[candidate.word] = existing
             return
         }

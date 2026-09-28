@@ -4,6 +4,7 @@ import JapaneseLearningDomain
 public struct VocabularyListView: View {
     let items: [VocabularyItem]
     @State private var filterOnlyNew: Bool = false
+    @State private var selectedCategory: String = "All"
     @State private var searchText: String = ""
     @State private var selectedItemForCard: VocabularyItem?
 
@@ -11,10 +12,19 @@ public struct VocabularyListView: View {
         self.items = items
     }
 
+    private var availableCategories: [String] {
+        var categories = Set(items.compactMap(\.category))
+        categories.remove("General")
+        var sorted = categories.sorted()
+        sorted.insert("All", at: 0)
+        return sorted
+    }
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 filterPicker
+                categoryFilterRow
                 listContent
             }
             .navigationTitle("Vocabulary")
@@ -31,7 +41,34 @@ public struct VocabularyListView: View {
             Text("New Words Only (\(newCount))").tag(true)
         }
         .pickerStyle(.segmented)
-        .padding()
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    private var categoryFilterRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(availableCategories, id: \.self) { cat in
+                    categoryChip(for: cat)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func categoryChip(for category: String) -> some View {
+        Button(action: { selectedCategory = category }) {
+            Text(category)
+                .font(.footnote)
+                .fontWeight(selectedCategory == category ? .semibold : .regular)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(selectedCategory == category ? Color.blue : Color.secondary.opacity(0.12))
+                .foregroundStyle(selectedCategory == category ? .white : .primary)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private var newCount: Int {
@@ -40,9 +77,10 @@ public struct VocabularyListView: View {
 
     private var filteredItems: [VocabularyItem] {
         items.filter { item in
-            let matchesFilter = !filterOnlyNew || item.isNewWord
+            let matchesNew = !filterOnlyNew || item.isNewWord
+            let matchesCat = selectedCategory == "All" || item.category == selectedCategory
             let matchesSearch = searchText.isEmpty || item.word.contains(searchText) || item.meaning.localizedCaseInsensitiveContains(searchText)
-            return matchesFilter && matchesSearch
+            return matchesNew && matchesCat && matchesSearch
         }
     }
 
@@ -59,7 +97,7 @@ public struct VocabularyListView: View {
         ContentUnavailableView(
             "No Vocabulary Found",
             systemImage: "character.book.closed",
-            description: Text(filterOnlyNew ? "No newly marked words in this lesson." : "Scan a lesson to extract vocabulary.")
+            description: Text(filterOnlyNew ? "No newly marked words in this category." : "Scan a lesson to extract vocabulary.")
         )
     }
 
@@ -76,25 +114,51 @@ public struct VocabularyListView: View {
     private func vocabularyRow(item: VocabularyItem) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(item.word)
-                        .font(.headline)
-                    Text(item.reading)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    if item.isNewWord {
-                        newBadge
-                    }
-                }
+                wordTitleRow(item: item)
                 Text(item.meaning)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: "rectangle.portrait.on.rectangle.portrait")
-                .foregroundStyle(.tertiary)
+            itemBadgeColumn(item: item)
         }
         .padding(.vertical, 4)
+    }
+
+    private func wordTitleRow(item: VocabularyItem) -> some View {
+        HStack(spacing: 8) {
+            Text(item.word)
+                .font(.headline)
+            Text(item.reading)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            if item.isNewWord {
+                newBadge
+            }
+        }
+    }
+
+    private func itemBadgeColumn(item: VocabularyItem) -> some View {
+        VStack(alignment: .trailing, spacing: 4) {
+            if let pageCode = item.pageCode {
+                Text(pageCode)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
+            }
+            if let cat = item.category, cat != "General" {
+                Text(cat)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.purple.opacity(0.1))
+                    .foregroundStyle(.purple)
+                    .clipShape(Capsule())
+            }
+        }
     }
 
     private var newBadge: some View {

@@ -23,13 +23,31 @@ public final class AnalyzeLessonUseCase: AnalyzeLessonUseCaseProtocol {
     }
 
     public func execute(lesson: Lesson) async throws -> Lesson {
-        let text = lesson.combinedText
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return lesson
+        var allVocab: [VocabularyItem] = []
+        var allGrammar: [GrammarItem] = []
+
+        for page in lesson.pages {
+            let content = try await extractFromPage(page, lessonId: lesson.id)
+            allVocab.append(contentsOf: content.vocabulary)
+            allGrammar.append(contentsOf: content.grammar)
         }
 
-        let studyContent = try await aiService.extractStudyContent(from: text, lessonId: lesson.id)
-        return try await persistAnalysis(lesson: lesson, content: studyContent)
+        let combined = ExtractedStudyContent(vocabulary: allVocab, grammar: allGrammar)
+        return try await persistAnalysis(lesson: lesson, content: combined)
+    }
+
+    private func extractFromPage(_ page: LessonPage, lessonId: UUID) async throws -> ExtractedStudyContent {
+        let trimmed = page.extractedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return ExtractedStudyContent(vocabulary: [], grammar: [])
+        }
+        return try await aiService.extractStudyContent(
+            from: page.extractedText,
+            lessonId: lessonId,
+            pageId: page.id,
+            pageCode: page.pageCode,
+            category: page.category
+        )
     }
 
     private func persistAnalysis(

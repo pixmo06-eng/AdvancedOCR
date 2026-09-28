@@ -11,6 +11,9 @@ public struct GrammarItem: Identifiable, Codable, Sendable, Equatable {
     public var occurrenceCount: Int
     public let examples: [DailyLifeExample]
     public let lessonId: UUID?
+    public var pageId: UUID?
+    public var pageCode: String?
+    public var category: String?
     public let createdAt: Date
 
     public init(
@@ -24,6 +27,9 @@ public struct GrammarItem: Identifiable, Codable, Sendable, Equatable {
         occurrenceCount: Int = 1,
         examples: [DailyLifeExample] = [],
         lessonId: UUID? = nil,
+        pageId: UUID? = nil,
+        pageCode: String? = nil,
+        category: String? = nil,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -36,6 +42,9 @@ public struct GrammarItem: Identifiable, Codable, Sendable, Equatable {
         self.occurrenceCount = occurrenceCount
         self.examples = examples
         self.lessonId = lessonId
+        self.pageId = pageId
+        self.pageCode = pageCode
+        self.category = category
         self.createdAt = createdAt
     }
 }

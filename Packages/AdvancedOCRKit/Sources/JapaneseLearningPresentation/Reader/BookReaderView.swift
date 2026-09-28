@@ -3,11 +3,26 @@ import JapaneseLearningDomain
 
 public struct BookReaderView: View {
     let lesson: Lesson
+    let allVocabulary: [VocabularyItem]
+    let allGrammar: [GrammarItem]
+
     @State private var selectedPageIndex: Int = 0
     @State private var showExtractedText: Bool = false
+    @State private var showStudySheet: Bool = false
 
-    public init(lesson: Lesson) {
+    public init(
+        lesson: Lesson,
+        allVocabulary: [VocabularyItem] = [],
+        allGrammar: [GrammarItem] = []
+    ) {
         self.lesson = lesson
+        self.allVocabulary = allVocabulary
+        self.allGrammar = allGrammar
+    }
+
+    private var currentPage: LessonPage? {
+        guard selectedPageIndex >= 0 && selectedPageIndex < lesson.pages.count else { return nil }
+        return lesson.pages[selectedPageIndex]
     }
 
     public var body: some View {
@@ -16,18 +31,26 @@ public struct BookReaderView: View {
             contentArea
             bottomNavigationBar
         }
-        .navigationTitle(lesson.title)
+        .navigationTitle(currentPage?.title ?? lesson.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .sheet(isPresented: $showStudySheet) {
+            if let page = currentPage {
+                PageStudySheetView(
+                    page: page,
+                    allVocabulary: allVocabulary,
+                    allGrammar: allGrammar
+                )
+            }
+        }
     }
 
     private var headerBar: some View {
         HStack {
-            Text("Page \(selectedPageIndex + 1) of \(max(lesson.pages.count, 1))")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            pageMetadataBadges
             Spacer()
+            studyPageButton
             textToggleSwitch
         }
         .padding(.horizontal)
@@ -35,10 +58,43 @@ public struct BookReaderView: View {
         .background(Color.secondary.opacity(0.08))
     }
 
+    private var pageMetadataBadges: some View {
+        HStack(spacing: 6) {
+            if let page = currentPage {
+                Text(page.pageCode)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.blue.opacity(0.12))
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
+
+                Text(page.category)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.purple.opacity(0.12))
+                    .foregroundStyle(.purple)
+                    .clipShape(Capsule())
+            }
+        }
+    }
+
+    private var studyPageButton: some View {
+        Button(action: { showStudySheet = true }) {
+            Label("Study", systemImage: "sparkles")
+                .font(.footnote)
+                .fontWeight(.medium)
+        }
+        .buttonStyle(.bordered)
+        .tint(.purple)
+    }
+
     private var textToggleSwitch: some View {
         Button(action: { showExtractedText.toggle() }) {
             Label(
-                showExtractedText ? "Show Image" : "Show Text",
+                showExtractedText ? "Image" : "Text",
                 systemImage: showExtractedText ? "photo" : "doc.text"
             )
             .font(.footnote)
@@ -120,9 +176,9 @@ public struct BookReaderView: View {
 
             Spacer()
 
-            Text("Swipe left/right to turn pages")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            Text("Page \(selectedPageIndex + 1) of \(max(lesson.pages.count, 1))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             Spacer()
 
