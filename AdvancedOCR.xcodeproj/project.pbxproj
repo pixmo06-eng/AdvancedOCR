@@ -10,8 +10,11 @@
 		31CBF79E245F66143D26D565 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 0225DC7E082F4C9E457C5529 /* Core */; };
 		4A0E1D554739610489694F39 /* AdvancedOCRApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 824B55CF088AAF19C62CC9CC /* AdvancedOCRApp.swift */; };
 		77D1610CC89067ED832B5943 /* OCRData in Frameworks */ = {isa = PBXBuildFile; productRef = 90A74B28B45D64033AD95E6A /* OCRData */; };
+		94A5FD2C86FA4F3B8D86F2C8 /* JapaneseLearningData in Frameworks */ = {isa = PBXBuildFile; productRef = 45781F921928F804FF4C089F /* JapaneseLearningData */; };
+		99194DC761C2CD42704F8D05 /* JapaneseLearningPresentation in Frameworks */ = {isa = PBXBuildFile; productRef = 4ACF743B50357A24DD522E70 /* JapaneseLearningPresentation */; };
 		A9EBAF3D87B2DC4BDE7C7C9F /* OCRPresentation in Frameworks */ = {isa = PBXBuildFile; productRef = 4E195AC4B3D54C04A672C88B /* OCRPresentation */; };
 		C25ECD479EA85A8D2EFDFAD6 /* OCRDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 040DF9F13A611ACC5DAE2F78 /* OCRDomain */; };
+		E51C5B99AB14501DCD22BB14 /* JapaneseLearningDomain in Frameworks */ = {isa = PBXBuildFile; productRef = C8056BF2DCAB2555218F14A8 /* JapaneseLearningDomain */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +32,9 @@
 				C25ECD479EA85A8D2EFDFAD6 /* OCRDomain in Frameworks */,
 				77D1610CC89067ED832B5943 /* OCRData in Frameworks */,
 				A9EBAF3D87B2DC4BDE7C7C9F /* OCRPresentation in Frameworks */,
+				E51C5B99AB14501DCD22BB14 /* JapaneseLearningDomain in Frameworks */,
+				94A5FD2C86FA4F3B8D86F2C8 /* JapaneseLearningData in Frameworks */,
+				99194DC761C2CD42704F8D05 /* JapaneseLearningPresentation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +94,9 @@
 				040DF9F13A611ACC5DAE2F78 /* OCRDomain */,
 				90A74B28B45D64033AD95E6A /* OCRData */,
 				4E195AC4B3D54C04A672C88B /* OCRPresentation */,
+				C8056BF2DCAB2555218F14A8 /* JapaneseLearningDomain */,
+				45781F921928F804FF4C089F /* JapaneseLearningData */,
+				4ACF743B50357A24DD522E70 /* JapaneseLearningPresentation */,
 			);
 			productName = AdvancedOCR;
 			productReference = 1EB7EA131BFEFF8396256AEC /* AdvancedOCR.app */;
@@ -145,8 +154,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan documents and extract text.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import document images.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan Japanese lesson documents and extract text.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import lesson photos.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -224,8 +233,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan documents and extract text.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import document images.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan Japanese lesson documents and extract text.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import lesson photos.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -342,6 +351,14 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = OCRDomain;
 		};
+		45781F921928F804FF4C089F /* JapaneseLearningData */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JapaneseLearningData;
+		};
+		4ACF743B50357A24DD522E70 /* JapaneseLearningPresentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JapaneseLearningPresentation;
+		};
 		4E195AC4B3D54C04A672C88B /* OCRPresentation */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OCRPresentation;
@@ -349,6 +366,10 @@
 		90A74B28B45D64033AD95E6A /* OCRData */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OCRData;
+		};
+		C8056BF2DCAB2555218F14A8 /* JapaneseLearningDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JapaneseLearningDomain;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

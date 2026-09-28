@@ -19,16 +19,32 @@
 - `Packages/AdvancedOCRKit`:
   - `Core`: Common error models (`AppError`) and foundation types.
   - `OCRDomain`: Entities (`RecognizedBlock`, `ScanResult`), repository contracts (`OCRServiceProtocol`), and use cases (`RecognizeTextUseCase`). Zero framework dependencies.
-  - `OCRData`: Implementations (`VisionOCRService` using Apple Vision framework).
+  - `OCRData`: Implementations (`VisionOCRService` using Apple Vision framework with Japanese + English support).
   - `OCRPresentation`: SwiftUI Views (`ScannerView`) and `@Observable` ViewModels (`ScannerViewModel`).
+  - `JapaneseLearningDomain`: Pure Swift domain layer:
+    - Entities: `Lesson`, `LessonPage`, `VocabularyItem`, `GrammarItem`, `DailyLifeExample`, `MasteryStatus`.
+    - Protocols: `LessonRepositoryProtocol`, `JapaneseAIServiceProtocol`.
+    - Use Cases: `FilterDuplicateVocabularyUseCase`, `FilterDuplicateGrammarUseCase`, `AnalyzeLessonUseCase`.
+  - `JapaneseLearningData`: Data layer implementations:
+    - `JapaneseNLPService`: On-device tokenization and POS tagging via Apple `NaturalLanguage`.
+    - `GeminiStudyAIService`: Hybrid AI service calling Gemini API with automatic offline fallback.
+    - `LocalLessonRepository`: Thread-safe actor for local JSON persistence.
+  - `JapaneseLearningPresentation`: Modern SwiftUI UI layer:
+    - `DocumentCameraScannerView`: Multi-page camera scanning via `VNDocumentCameraViewController`.
+    - `BookReaderView`: Digital lesson book reader with page turning and text inspection overlay.
+    - `VocabularyListView` & `VocabularyCardView`: Filterable vocab list with "NEW" badges and interactive flashcards.
+    - `GrammarListView` & `GrammarCardView`: Filterable grammar list with formation patterns and daily conversational examples.
+    - `LessonListView` & `LessonListViewModel`: Lessons dashboard and scan-to-analyze coordinator.
 - `App`: Main iOS application target (`AdvancedOCRApp.swift`), generated via XcodeGen (`project.yml`).
 
 ## Changelog & Feature Progress
 - [x] Initialized Git repository, `.gitignore`, [AGENTS.md](file:///Users/pixmo/Documents/Github/AdvancedOCR/AGENTS.md), and [MEMORY.md](file:///Users/pixmo/Documents/Github/AdvancedOCR/MEMORY.md).
 - [x] Scaffolded SPM modular architecture (`AdvancedOCRKit`) with Clean Architecture layers.
 - [x] Implemented Domain entities, repository protocols, and text recognition use case.
-- [x] Implemented Apple Vision OCR data service (`VisionOCRService`).
-- [x] Implemented SwiftUI presentation layer (`ScannerView` and `@Observable` `ScannerViewModel`).
-- [x] Added unit tests for domain use case with mock service.
-- [x] Configured XcodeGen (`project.yml`) and verified successful iOS simulator build.
-- [ ] Next: Camera capture & Photo Picker integration for document scanning.
+- [x] Implemented Apple Vision OCR data service (`VisionOCRService`) with Japanese language recognition.
+- [x] Built Japanese Learning domain with duplicate filtering use cases for vocabulary and grammar.
+- [x] Built Japanese Learning data layer (`JapaneseNLPService`, `GeminiStudyAIService`, `LocalLessonRepository`).
+- [x] Built Japanese presentation layer: Document Camera scanner, Book Reader, Vocabulary cards with daily life context, Grammar list with formation rules.
+- [x] Built unit test suites (`JapaneseLearningDomainTests` and `OCRDomainTests`) - all passing.
+- [x] Verified iOS Simulator build (`xcodebuild` succeeded with 0 errors).
+- [ ] Next: Settings view for entering Gemini API key and choosing study preferences.

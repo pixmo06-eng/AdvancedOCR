@@ -44,6 +44,7 @@ public final class VisionOCRService: OCRServiceProtocol {
         }
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
+        request.recognitionLanguages = ["ja-JP", "ja", "en-US"]
         return request
     }
 

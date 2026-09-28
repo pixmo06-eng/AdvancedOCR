@@ -11,7 +11,10 @@ let package = Package(
         .library(name: "Core", targets: ["Core"]),
         .library(name: "OCRDomain", targets: ["OCRDomain"]),
         .library(name: "OCRData", targets: ["OCRData"]),
-        .library(name: "OCRPresentation", targets: ["OCRPresentation"])
+        .library(name: "OCRPresentation", targets: ["OCRPresentation"]),
+        .library(name: "JapaneseLearningDomain", targets: ["JapaneseLearningDomain"]),
+        .library(name: "JapaneseLearningData", targets: ["JapaneseLearningData"]),
+        .library(name: "JapaneseLearningPresentation", targets: ["JapaneseLearningPresentation"])
     ],
     targets: [
         .target(
@@ -30,9 +33,25 @@ let package = Package(
             name: "OCRPresentation",
             dependencies: ["Core", "OCRDomain"]
         ),
+        .target(
+            name: "JapaneseLearningDomain",
+            dependencies: ["Core", "OCRDomain"]
+        ),
+        .target(
+            name: "JapaneseLearningData",
+            dependencies: ["Core", "OCRDomain", "JapaneseLearningDomain"]
+        ),
+        .target(
+            name: "JapaneseLearningPresentation",
+            dependencies: ["Core", "OCRDomain", "JapaneseLearningDomain", "JapaneseLearningData"]
+        ),
         .testTarget(
             name: "OCRDomainTests",
             dependencies: ["OCRDomain"]
+        ),
+        .testTarget(
+            name: "JapaneseLearningDomainTests",
+            dependencies: ["JapaneseLearningDomain"]
         )
     ]
 )
