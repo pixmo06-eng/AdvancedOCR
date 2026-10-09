@@ -70,6 +70,22 @@ public final class LessonListViewModel {
         }
     }
 
+    public func updatePage(lessonId: UUID, page: LessonPage) async {
+        guard let index = lessons.firstIndex(where: { $0.id == lessonId }),
+              let pageIndex = lessons[index].pages.firstIndex(where: { $0.id == page.id }) else { return }
+
+        lessons[index].pages[pageIndex] = page
+        do {
+            try await repository.saveLesson(lessons[index])
+            try await repository.saveVocabularyItems(page.vocabulary)
+            try await repository.saveGrammarItems(page.grammar)
+            vocabularyList = try await repository.fetchAllVocabulary()
+            grammarList = try await repository.fetchAllGrammar()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     /// Appends newly scanned pages to an existing lesson and returns the updated lesson.
     public func appendPages(to lessonId: UUID, pagesData: [Data]) async -> Lesson? {
         guard !pagesData.isEmpty,

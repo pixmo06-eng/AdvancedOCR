@@ -6,6 +6,7 @@ public struct BookReaderView: View {
     let allVocabulary: [VocabularyItem]
     let allGrammar: [GrammarItem]
     let onAddPages: ((UUID, [Data]) async -> Lesson?)?
+    let onUpdatePage: ((LessonPage) async -> Void)?
 
     @State private var selectedPageIndex: Int = 0
     @State private var showExtractedText: Bool = false
@@ -17,12 +18,14 @@ public struct BookReaderView: View {
         lesson: Lesson,
         allVocabulary: [VocabularyItem] = [],
         allGrammar: [GrammarItem] = [],
-        onAddPages: ((UUID, [Data]) async -> Lesson?)? = nil
+        onAddPages: ((UUID, [Data]) async -> Lesson?)? = nil,
+        onUpdatePage: ((LessonPage) async -> Void)? = nil
     ) {
         self._lesson = State(initialValue: lesson)
         self.allVocabulary = allVocabulary
         self.allGrammar = allGrammar
         self.onAddPages = onAddPages
+        self.onUpdatePage = onUpdatePage
     }
 
     private var currentPage: LessonPage? {
@@ -42,7 +45,13 @@ public struct BookReaderView: View {
         #endif
         .sheet(isPresented: $showStudySheet) {
             if let page = currentPage {
-                PageStudySheetView(page: page)
+                PageStudySheetView(
+                    page: page,
+                    onPageUpdated: { updatedPage in
+                        handlePageSave(updatedPage)
+                        await onUpdatePage?(updatedPage)
+                    }
+                )
             }
         }
         .sheet(isPresented: $showEditTextSheet) {

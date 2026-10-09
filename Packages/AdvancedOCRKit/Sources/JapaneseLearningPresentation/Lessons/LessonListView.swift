@@ -59,6 +59,9 @@ public struct LessonListView: View {
                     allGrammar: viewModel.grammarList,
                     onAddPages: { id, pages in
                         await viewModel.appendPages(to: id, pagesData: pages)
+                    },
+                    onUpdatePage: { updatedPage in
+                        await viewModel.updatePage(lessonId: lesson.id, page: updatedPage)
                     }
                 )) {
                     lessonRow(lesson: lesson)

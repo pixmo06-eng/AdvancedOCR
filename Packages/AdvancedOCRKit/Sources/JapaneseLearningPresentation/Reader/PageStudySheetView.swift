@@ -3,13 +3,21 @@ import JapaneseLearningDomain
 import JapaneseLearningData
 
 public struct PageStudySheetView: View {
-    let page: LessonPage
+    @State private var page: LessonPage
+    private let onPageUpdated: ((LessonPage) async -> Void)?
+
     @State private var selectedTab: StudyTab = .vocabulary
     @State private var selectedCardItem: VocabularyItem?
     @State private var pageVocabulary: [VocabularyItem] = []
     @State private var pageGrammar: [GrammarItem] = []
     @State private var isLoading: Bool = false
+    @State private var isReanalyzing: Bool = false
+    @State private var isShowingSettings: Bool = false
+    @State private var isShowingReview: Bool = false
+    @State private var candidateContent: ExtractedStudyContent?
+    @State private var errorMessage: String?
     @State private var localAIModel: LocalJapaneseAIModel = LocalJapaneseAIModel()
+    @State private var customAIService: CustomLocalAIServiceProtocol = CustomLocalAIService()
     @State private var aiGeneratedExamples: [UUID: [DailyLifeExample]] = [:]
 
     public enum StudyTab: String, CaseIterable {
@@ -17,8 +25,12 @@ public struct PageStudySheetView: View {
         case grammar = "文法"
     }
 
-    public init(page: LessonPage) {
-        self.page = page
+    public init(
+        page: LessonPage,
+        onPageUpdated: ((LessonPage) async -> Void)? = nil
+    ) {
+        self._page = State(initialValue: page)
+        self.onPageUpdated = onPageUpdated
     }
 
     public var body: some View {
@@ -36,6 +48,25 @@ public struct PageStudySheetView: View {
                 VocabularyCardView(item: updatedItemWithAI(item))
                     .presentationDetents([.medium])
             }
+            .sheet(isPresented: $isShowingSettings) {
+                CustomAISettingsView()
+            }
+            .sheet(isPresented: $isShowingReview) {
+                if let candidateContent {
+                    ReanalysisReviewSheetView(
+                        candidateContent: candidateContent,
+                        currentVocabCount: pageVocabulary.count,
+                        currentGrammarCount: pageGrammar.count,
+                        onAccept: handleAcceptNewResult,
+                        onReject: handleRejectNewResult
+                    )
+                }
+            }
+            .alert("エラー", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+                Button("OK") { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
+            }
             .task {
                 await loadPageContent()
             }
@@ -47,9 +78,7 @@ public struct PageStudySheetView: View {
             badgeView(title: page.pageCode, color: .blue)
             badgeView(title: page.category, color: .purple)
             Spacer()
-            Text("ページ学習")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            reanalyzeButton
         }
         .padding(.horizontal)
         .padding(.top, 8)
@@ -64,6 +93,23 @@ public struct PageStudySheetView: View {
             .background(color.opacity(0.12))
             .foregroundStyle(color)
             .clipShape(Capsule())
+    }
+
+    private var reanalyzeButton: some View {
+        Button(action: { Task { await triggerReanalysis() } }) {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                Text(isReanalyzing ? "再解析中..." : "再解析 (カスタムAI)")
+            }
+            .font(.caption2)
+            .fontWeight(.bold)
+            .foregroundStyle(.purple)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.purple.opacity(0.12))
+            .clipShape(Capsule())
+        }
+        .disabled(isReanalyzing || isLoading)
     }
 
     private var contentSection: some View {
@@ -84,14 +130,23 @@ public struct PageStudySheetView: View {
 
     @ViewBuilder
     private var tabContent: some View {
-        if isLoading {
-            ProgressView("Local AIでテキスト解析中...")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if isLoading || isReanalyzing {
+            loadingView
         } else if selectedTab == .vocabulary {
             vocabList
         } else {
             grammarList
         }
+    }
+
+    private var loadingView: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+            Text(isReanalyzing ? "ローカルAIサーバーで再解析中..." : "テキスト解析中...")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var vocabList: some View {
@@ -103,7 +158,7 @@ public struct PageStudySheetView: View {
             .padding(.vertical, 4)
         }
         .overlay {
-            if pageVocabulary.isEmpty && !isLoading {
+            if pageVocabulary.isEmpty && !isLoading && !isReanalyzing {
                 ContentUnavailableView("このページの語彙は見つかりませんでした", systemImage: "character.book.closed")
             }
         }
@@ -156,7 +211,7 @@ public struct PageStudySheetView: View {
             }
         }
         .overlay {
-            if pageGrammar.isEmpty && !isLoading {
+            if pageGrammar.isEmpty && !isLoading && !isReanalyzing {
                 ContentUnavailableView("このページの文法は見つかりませんでした", systemImage: "book.pages")
             }
         }
@@ -165,11 +220,62 @@ public struct PageStudySheetView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
-            Button(action: { Task { await forceReextract() } }) {
-                Image(systemName: "arrow.clockwise")
+            HStack(spacing: 8) {
+                Button(action: { isShowingSettings = true }) {
+                    Image(systemName: "gearshape")
+                }
+                Button(action: { Task { await forceReextractOnDevice() } }) {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isLoading || isReanalyzing)
             }
-            .disabled(isLoading)
         }
+    }
+
+    private func triggerReanalysis() async {
+        let config = CustomAIConfiguration.loadFromDefaults()
+        guard !config.selectedModel.isEmpty else {
+            isShowingSettings = true
+            return
+        }
+
+        isReanalyzing = true
+        errorMessage = nil
+
+        do {
+            let result = try await customAIService.reanalyzePage(
+                text: page.extractedText,
+                pageCode: page.pageCode,
+                category: page.category,
+                lessonId: page.id,
+                config: config
+            )
+            candidateContent = result
+            isShowingReview = true
+        } catch {
+            errorMessage = "再解析に失敗しました: \(error.localizedDescription)"
+        }
+
+        isReanalyzing = false
+    }
+
+    private func handleAcceptNewResult() {
+        guard let candidateContent else { return }
+        pageVocabulary = candidateContent.vocabulary
+        pageGrammar = candidateContent.grammar
+
+        var updatedPage = page
+        updatedPage.vocabulary = candidateContent.vocabulary
+        updatedPage.grammar = candidateContent.grammar
+        page = updatedPage
+
+        Task {
+            await onPageUpdated?(updatedPage)
+        }
+    }
+
+    private func handleRejectNewResult() {
+        candidateContent = nil
     }
 
     private func loadPageContent() async {
@@ -182,10 +288,10 @@ public struct PageStudySheetView: View {
             return
         }
 
-        await forceReextract()
+        await forceReextractOnDevice()
     }
 
-    private func forceReextract() async {
+    private func forceReextractOnDevice() async {
         isLoading = true
         let rawText = page.extractedText
         let vocab = await localAIModel.suggestVocabulary(
