@@ -27,9 +27,11 @@ public struct GrammarCardView: View {
                 Text(item.pattern)
                     .font(.title)
                     .fontWeight(.bold)
-                Text(item.meaning)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                    Text(item.meaning)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer()
             if item.isNewGrammar {
@@ -40,7 +42,7 @@ public struct GrammarCardView: View {
 
     private var formationSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Formation Rule")
+            Text("接続・文型")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -55,7 +57,7 @@ public struct GrammarCardView: View {
 
     private var explanationSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Explanation")
+            Text("解説")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -66,7 +68,7 @@ public struct GrammarCardView: View {
 
     private var examplesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Daily Life Examples")
+            Text("例文")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -90,15 +92,11 @@ public struct GrammarCardView: View {
                 .font(.body)
                 .fontWeight(.medium)
 
-            if !example.reading.isEmpty {
+            if !example.reading.isEmpty && example.reading != example.japanese {
                 Text(example.reading)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
-            Text(example.english)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -107,7 +105,7 @@ public struct GrammarCardView: View {
     }
 
     private var newBadge: some View {
-        Text("NEW")
+        Text("新")
             .font(.caption)
             .fontWeight(.heavy)
             .foregroundStyle(.white)

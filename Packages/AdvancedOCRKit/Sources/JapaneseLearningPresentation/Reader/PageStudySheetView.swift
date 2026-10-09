@@ -13,8 +13,8 @@ public struct PageStudySheetView: View {
     @State private var aiGeneratedExamples: [UUID: [DailyLifeExample]] = [:]
 
     public enum StudyTab: String, CaseIterable {
-        case vocabulary = "Vocabulary"
-        case grammar = "Grammar"
+        case vocabulary = "語彙"
+        case grammar = "文法"
     }
 
     public init(page: LessonPage) {
@@ -27,7 +27,7 @@ public struct PageStudySheetView: View {
                 headerBanner
                 contentSection
             }
-            .navigationTitle("Study: \(page.title)")
+            .navigationTitle("学習: \(page.title)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -47,7 +47,7 @@ public struct PageStudySheetView: View {
             badgeView(title: page.pageCode, color: .blue)
             badgeView(title: page.category, color: .purple)
             Spacer()
-            Text("Page-Specific Study")
+            Text("ページ学習")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -74,9 +74,9 @@ public struct PageStudySheetView: View {
     }
 
     private var tabPicker: some View {
-        Picker("Content", selection: $selectedTab) {
-            Text("Vocabulary (\(pageVocabulary.count))").tag(StudyTab.vocabulary)
-            Text("Grammar (\(pageGrammar.count))").tag(StudyTab.grammar)
+        Picker("区分", selection: $selectedTab) {
+            Text("語彙 (\(pageVocabulary.count))").tag(StudyTab.vocabulary)
+            Text("文法 (\(pageGrammar.count))").tag(StudyTab.grammar)
         }
         .pickerStyle(.segmented)
         .padding()
@@ -85,7 +85,7 @@ public struct PageStudySheetView: View {
     @ViewBuilder
     private var tabContent: some View {
         if isLoading {
-            ProgressView("Analyzing page text with Local AI...")
+            ProgressView("Local AIでテキスト解析中...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if selectedTab == .vocabulary {
             vocabList
@@ -104,7 +104,7 @@ public struct PageStudySheetView: View {
         }
         .overlay {
             if pageVocabulary.isEmpty && !isLoading {
-                ContentUnavailableView("No Vocabulary Found on this Page", systemImage: "character.book.closed")
+                ContentUnavailableView("このページの語彙は見つかりませんでした", systemImage: "character.book.closed")
             }
         }
     }
@@ -114,8 +114,12 @@ public struct PageStudySheetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.word).font(.headline)
-                    Text(item.reading).font(.caption).foregroundStyle(.secondary)
-                    Text(item.meaning).font(.footnote).foregroundStyle(.secondary)
+                    if !item.reading.isEmpty && item.reading != item.word {
+                        Text(item.reading).font(.caption).foregroundStyle(.secondary)
+                    }
+                    if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                        Text(item.meaning).font(.footnote).foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
                 if item.isNewWord {
@@ -129,7 +133,7 @@ public struct PageStudySheetView: View {
     private func aiSentenceButton(item: VocabularyItem) -> some View {
         Button(action: { generateSentences(for: item) }) {
             Label(
-                aiGeneratedExamples[item.id] != nil ? "AI Sentences Ready ✓" : "Make Sentences with Local AI",
+                aiGeneratedExamples[item.id] != nil ? "AI例文 作成済み ✓" : "AIで例文を作成",
                 systemImage: "wand.and.stars"
             )
             .font(.caption2)
@@ -144,14 +148,16 @@ public struct PageStudySheetView: View {
             NavigationLink(destination: GrammarCardView(item: item)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.pattern).font(.headline)
-                    Text(item.meaning).font(.caption).foregroundStyle(.secondary)
+                    if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                        Text(item.meaning).font(.caption).foregroundStyle(.secondary)
+                    }
                     Text(item.formation).font(.caption2).foregroundStyle(.blue)
                 }
             }
         }
         .overlay {
             if pageGrammar.isEmpty && !isLoading {
-                ContentUnavailableView("No Grammar Patterns Found on this Page", systemImage: "book.pages")
+                ContentUnavailableView("このページの文法は見つかりませんでした", systemImage: "book.pages")
             }
         }
     }
@@ -247,7 +253,7 @@ public struct PageStudySheetView: View {
     }
 
     private var newBadge: some View {
-        Text("NEW")
+        Text("新")
             .font(.system(size: 10, weight: .heavy))
             .foregroundStyle(.white)
             .padding(.horizontal, 6)

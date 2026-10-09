@@ -154,9 +154,9 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
     ) -> [GrammarItem] {
         var items: [GrammarItem] = []
         let patterns: [(pattern: String, meaning: String, formation: String, explanation: String)] = [
-            ("〜てください", "Please do", "Te-form + ください", "Used to make polite requests in daily life."),
-            ("〜てもいい", "May do / Permission", "Te-form + もいい", "Used to ask or grant permission."),
-            ("〜なければならない", "Must do / Obligation", "Nai-stem + ければならない", "Indicates strong necessity or duty.")
+            ("〜てください", "〜てください（依頼）", "動詞て形 ＋ ください", "相手にていねいにお願いするときに使います。"),
+            ("〜てもいい", "〜てもいい（許可）", "動詞て形 ＋ もいい", "許可を求めたり与えたりするときに使います。"),
+            ("〜なければならない", "〜なければならない（義務）", "動詞ない形 ＋ ければならない", "義務や必要な行動を表します。")
         ]
 
         for item in patterns {
@@ -166,8 +166,8 @@ public final class GeminiStudyAIService: JapaneseAIServiceProtocol {
             let example = DailyLifeExample(
                 japanese: "\(item.pattern.replacingOccurrences(of: "〜", with: ""))の文脈です。",
                 reading: "ぶんみゃくです。",
-                english: "Used in everyday context.",
-                scenario: "Daily Practice"
+                english: "",
+                scenario: "文法練習"
             )
             items.append(GrammarItem(
                 pattern: item.pattern,
@@ -223,16 +223,18 @@ struct VocabDTO: Codable {
         pageCode: String?,
         category: String?
     ) -> VocabularyItem {
+        let cleanMeaning = meaning.contains(where: \.isASCII) ? "" : meaning
+        let cleanScenario = (scenario?.contains(where: \.isASCII) == true) ? "日常生活" : (scenario ?? "日常生活")
         let example = DailyLifeExample(
             japanese: exampleJapanese ?? word,
             reading: exampleReading ?? reading,
-            english: exampleEnglish ?? meaning,
-            scenario: scenario ?? "Everyday conversation"
+            english: "",
+            scenario: cleanScenario
         )
         return VocabularyItem(
             word: word,
             reading: reading,
-            meaning: meaning,
+            meaning: cleanMeaning,
             jlptLevel: jlptLevel,
             isNewWord: true,
             examples: [example],
@@ -261,11 +263,12 @@ struct GrammarDTO: Codable {
         pageCode: String?,
         category: String?
     ) -> GrammarItem {
+        let cleanScenario = (scenario?.contains(where: \.isASCII) == true) ? "文法練習" : (scenario ?? "文法練習")
         let example = DailyLifeExample(
             japanese: exampleJapanese ?? pattern,
             reading: exampleReading ?? "",
-            english: exampleEnglish ?? meaning,
-            scenario: scenario ?? "Daily use"
+            english: "",
+            scenario: cleanScenario
         )
         return GrammarItem(
             pattern: pattern,
@@ -282,3 +285,4 @@ struct GrammarDTO: Codable {
         )
     }
 }
+

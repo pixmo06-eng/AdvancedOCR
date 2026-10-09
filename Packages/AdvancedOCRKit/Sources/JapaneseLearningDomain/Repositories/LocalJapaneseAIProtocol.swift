@@ -5,4 +5,5 @@ public protocol LocalJapaneseAIProtocol: Sendable {
     func extractGrammar(from text: String, pageCode: String?, category: String?, lessonId: UUID) async -> [GrammarItem]
     func suggestVocabulary(from text: String, pageCode: String?, category: String?, lessonId: UUID) async -> [VocabularyItem]
     func correctOCRText(_ rawText: String) -> String
+    func verifyVocabulary(candidates: [VocabularyItem], contextText: String) async -> [VocabularyItem]
 }

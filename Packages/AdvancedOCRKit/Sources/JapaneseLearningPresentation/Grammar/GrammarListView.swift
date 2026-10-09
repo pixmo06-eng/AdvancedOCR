@@ -4,7 +4,7 @@ import JapaneseLearningDomain
 public struct GrammarListView: View {
     let items: [GrammarItem]
     @State private var filterOnlyNew: Bool = false
-    @State private var selectedCategory: String = "All"
+    @State private var selectedCategory: String = "すべて"
     @State private var searchText: String = ""
 
     public init(items: [GrammarItem]) {
@@ -15,7 +15,7 @@ public struct GrammarListView: View {
         var categories = Set(items.compactMap(\.category))
         categories.remove("General")
         var sorted = categories.sorted()
-        sorted.insert("All", at: 0)
+        sorted.insert("すべて", at: 0)
         return sorted
     }
 
@@ -26,14 +26,14 @@ public struct GrammarListView: View {
                 categoryFilterRow
                 listContent
             }
-            .navigationTitle("Grammar")
+            .navigationTitle("文法")
         }
     }
 
     private var filterPicker: some View {
-        Picker("Filter", selection: $filterOnlyNew) {
-            Text("All (\(items.count))").tag(false)
-            Text("New Grammar Only (\(newCount))").tag(true)
+        Picker("フィルター", selection: $filterOnlyNew) {
+            Text("すべて (\(items.count))").tag(false)
+            Text("新出文法のみ (\(newCount))").tag(true)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal)
@@ -73,15 +73,46 @@ public struct GrammarListView: View {
     private var filteredItems: [GrammarItem] {
         items.filter { item in
             let matchesNew = !filterOnlyNew || item.isNewGrammar
-            let matchesCat = selectedCategory == "All" || item.category == selectedCategory
-            let matchesSearch = searchText.isEmpty || item.pattern.contains(searchText) || item.meaning.localizedCaseInsensitiveContains(searchText)
+            let matchesCat = selectedCategory == "すべて" || item.category == selectedCategory
+            let matchesSearch = searchText.isEmpty || item.pattern.contains(searchText)
             return matchesNew && matchesCat && matchesSearch
+        }
+    }
+
+    private struct GrammarGroup: Identifiable {
+        let id: String
+        let title: String
+        let items: [GrammarItem]
+    }
+
+    private var groupedSections: [GrammarGroup] {
+        if selectedCategory == "すべて" {
+            return groupByLessonCategory()
+        }
+        return groupByPage()
+    }
+
+    private func groupByLessonCategory() -> [GrammarGroup] {
+        let dict = Dictionary(grouping: filteredItems) { item in
+            item.category ?? "その他"
+        }
+        return dict.keys.sorted().map { key in
+            GrammarGroup(id: key, title: key, items: dict[key] ?? [])
+        }
+    }
+
+    private func groupByPage() -> [GrammarGroup] {
+        let dict = Dictionary(grouping: filteredItems) { item in
+            item.pageCode.map { "Page \($0)" } ?? "その他"
+        }
+        return dict.keys.sorted().map { key in
+            GrammarGroup(id: key, title: key, items: dict[key] ?? [])
         }
     }
 
     @ViewBuilder
     private var listContent: some View {
-        if filteredItems.isEmpty {
+        if groupedSections.isEmpty {
             emptyStateView
         } else {
             grammarList
@@ -90,27 +121,47 @@ public struct GrammarListView: View {
 
     private var emptyStateView: some View {
         ContentUnavailableView(
-            "No Grammar Found",
+            "文法が見つかりません",
             systemImage: "book.pages",
-            description: Text(filterOnlyNew ? "No newly marked grammar in this category." : "Scan a lesson to extract grammar patterns.")
+            description: Text(filterOnlyNew ? "新出文法はありません。" : "レッスンをスキャンして文法を抽出してください。")
         )
     }
 
     private var grammarList: some View {
-        List(filteredItems) { item in
-            NavigationLink(destination: GrammarCardView(item: item)) {
-                grammarRow(item: item)
+        List {
+            ForEach(groupedSections) { section in
+                Section(header: sectionHeaderView(title: section.title, count: section.items.count)) {
+                    ForEach(section.items) { item in
+                        NavigationLink(destination: GrammarCardView(item: item)) {
+                            grammarRow(item: item)
+                        }
+                    }
+                }
             }
         }
-        .searchable(text: $searchText, prompt: "Search grammar pattern or meaning")
+        .searchable(text: $searchText, prompt: "文法を検索")
+    }
+
+    private func sectionHeaderView(title: String, count: Int) -> some View {
+        HStack {
+            Text(title)
+                .font(.footnote)
+                .fontWeight(.bold)
+            Spacer()
+            Text("\(count)項目")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
     }
 
     private func grammarRow(item: GrammarItem) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             grammarTitleRow(item: item)
-            Text(item.meaning)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                Text(item.meaning)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             grammarFooterRow(item: item)
         }
         .padding(.vertical, 4)
@@ -146,7 +197,7 @@ public struct GrammarListView: View {
     }
 
     private var newBadge: some View {
-        Text("NEW")
+        Text("新")
             .font(.system(size: 10, weight: .heavy))
             .foregroundStyle(.white)
             .padding(.horizontal, 6)

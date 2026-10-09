@@ -13,12 +13,14 @@ struct AdvancedOCRApp: App {
     init() {
         let ocrService = VisionOCRService()
         let repository = LocalLessonRepository()
+        let localAI = LocalJapaneseAIModel()
         let aiService = GeminiStudyAIService {
             UserDefaults.standard.string(forKey: "gemini_api_key")
         }
         let analyzeUseCase = AnalyzeLessonUseCase(
             aiService: aiService,
-            repository: repository
+            repository: repository,
+            localAI: localAI
         )
         let vm = LessonListViewModel(
             repository: repository,
@@ -41,21 +43,22 @@ struct AdvancedOCRApp: App {
     private var lessonsTab: some View {
         LessonListView(viewModel: lessonViewModel)
             .tabItem {
-                Label("Lessons", systemImage: "book.pages")
+                Label("レッスン", systemImage: "book.pages")
             }
     }
 
     private var vocabularyTab: some View {
         VocabularyListView(items: lessonViewModel.vocabularyList)
             .tabItem {
-                Label("Vocabulary", systemImage: "character.book.closed")
+                Label("語彙", systemImage: "character.book.closed")
             }
     }
 
     private var grammarTab: some View {
         GrammarListView(items: lessonViewModel.grammarList)
             .tabItem {
-                Label("Grammar", systemImage: "text.book.closed")
+                Label("文法", systemImage: "text.book.closed")
             }
     }
+
 }

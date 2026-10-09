@@ -10,19 +10,22 @@ public final class AnalyzeLessonUseCase: AnalyzeLessonUseCaseProtocol {
     private let vocabFilter: FilterDuplicateVocabularyUseCaseProtocol
     private let grammarFilter: FilterDuplicateGrammarUseCaseProtocol
     private let textCleaner: JapaneseTextCleaner
+    private let localAI: LocalJapaneseAIProtocol?
 
     public init(
         aiService: JapaneseAIServiceProtocol,
         repository: LessonRepositoryProtocol,
         vocabFilter: FilterDuplicateVocabularyUseCaseProtocol = FilterDuplicateVocabularyUseCase(),
         grammarFilter: FilterDuplicateGrammarUseCaseProtocol = FilterDuplicateGrammarUseCase(),
-        textCleaner: JapaneseTextCleaner = JapaneseTextCleaner()
+        textCleaner: JapaneseTextCleaner = JapaneseTextCleaner(),
+        localAI: LocalJapaneseAIProtocol? = nil
     ) {
         self.aiService = aiService
         self.repository = repository
         self.vocabFilter = vocabFilter
         self.grammarFilter = grammarFilter
         self.textCleaner = textCleaner
+        self.localAI = localAI
     }
 
     public func execute(lesson: Lesson) async throws -> Lesson {
@@ -51,14 +54,18 @@ public final class AnalyzeLessonUseCase: AnalyzeLessonUseCaseProtocol {
         guard !cleaned.isEmpty else {
             return ExtractedStudyContent(vocabulary: [], grammar: [])
         }
-        return try await aiService.extractStudyContent(
+        let content = try await aiService.extractStudyContent(
             from: cleaned,
             lessonId: lessonId,
             pageId: page.id,
             pageCode: page.pageCode,
             category: page.category
         )
+        guard let localAI else { return content }
+        let verifiedVocab = await localAI.verifyVocabulary(candidates: content.vocabulary, contextText: cleaned)
+        return ExtractedStudyContent(vocabulary: verifiedVocab, grammar: content.grammar)
     }
+
 
     private func persistAnalysis(
         lesson: Lesson,

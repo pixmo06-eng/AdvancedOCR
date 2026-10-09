@@ -61,6 +61,8 @@
 - [x] Implemented `LocalJapaneseAIModel` for instant on-device daily life sentence and grammar generation.
 - [x] Added `EditPageTextSheet` to allow direct correction of misread OCR text and instant Local AI re-analysis.
 - [x] Added `JapaneseLearningDataTests` and expanded test suite to 13 passing unit tests.
-- [ ] Next: Settings view for entering Gemini API key and choosing study preferences.
 - [x] Single-kanji extraction fix, strictly page-specific Study sheet, Local AI model, OCR text editor.
 - [x] Add pages to an existing lesson: `+` in `BookReaderView` toolbar -> scanner -> `LessonListViewModel.appendPages` (OCR continues page index/category, analysis per new page, merged lesson persisted).
+- [x] Group vocabulary properly by category and page code sections in `VocabularyListView` & `GrammarListView`.
+- [x] Complete immersion: omitted all English from vocabulary list, flashcards, reader study sheets, and AI daily life examples.
+- [x] Verified vocabulary extraction using Local AI morphological validation (`NLTagger`), filtering out particles, textbook metadata, and OCR artifacts.

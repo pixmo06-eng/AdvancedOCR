@@ -40,13 +40,15 @@ public struct VocabularyCardView: View {
         VStack(spacing: 16) {
             topBadgesRow
             Spacer()
-            Text(item.reading)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if !item.reading.isEmpty && item.reading != item.word {
+                Text(item.reading)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             Text(item.word)
                 .font(.system(size: 42, weight: .bold))
             Spacer()
-            Text("Tap to reveal meaning & daily examples")
+            Text("タップして詳細を表示")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -55,23 +57,60 @@ public struct VocabularyCardView: View {
 
     private var cardBack: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(item.meaning)
-                .font(.title2)
-                .fontWeight(.semibold)
-
+            cardBackHeader
             if !item.examples.isEmpty {
                 examplesSection
             }
-
             Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
     }
 
+    private var cardBackHeader: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text(item.word)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                if !item.reading.isEmpty && item.reading != item.word {
+                    Text(item.reading)
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            badgesRow
+            meaningRow
+        }
+    }
+
+    @ViewBuilder
+    private var badgesRow: some View {
+        let hasJapanesePOS = !item.partOfSpeech.isEmpty && !item.partOfSpeech.unicodeScalars.contains(where: \.isASCII)
+        if hasJapanesePOS {
+            Text(item.partOfSpeech)
+                .font(.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.blue.opacity(0.1))
+                .foregroundStyle(.blue)
+                .clipShape(Capsule())
+        }
+    }
+
+    @ViewBuilder
+    private var meaningRow: some View {
+        let hasJapaneseMeaning = !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII)
+        if hasJapaneseMeaning {
+            Text(item.meaning)
+                .font(.body)
+                .foregroundStyle(.secondary)
+        }
+    }
+
     private var examplesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Daily Life Context")
+            Text("日常生活の例文")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -95,9 +134,11 @@ public struct VocabularyCardView: View {
                 .font(.body)
                 .fontWeight(.medium)
 
-            Text(example.english)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            if !example.reading.isEmpty && example.reading != example.japanese {
+                Text(example.reading)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -116,7 +157,7 @@ public struct VocabularyCardView: View {
     }
 
     private var newWordBadge: some View {
-        Text("NEW")
+        Text("新")
             .font(.caption2)
             .fontWeight(.heavy)
             .foregroundStyle(.white)
@@ -127,7 +168,7 @@ public struct VocabularyCardView: View {
     }
 
     private var occurrenceBadge: some View {
-        Text("Seen \(item.occurrenceCount)x")
+        Text("\(item.occurrenceCount)回 登場")
             .font(.caption2)
             .foregroundStyle(.secondary)
     }
@@ -138,7 +179,7 @@ public struct VocabularyCardView: View {
     }
 
     private var hintText: some View {
-        Text(isFlipped ? "Tap card to flip back" : "Tap card to view details")
+        Text(isFlipped ? "タップして戻る" : "タップして詳細を見る")
             .font(.caption2)
             .foregroundStyle(.tertiary)
     }
