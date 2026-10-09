@@ -24,16 +24,22 @@ public final class JapaneseNLPService: Sendable {
     }
 
     private func isJapaneseWord(_ word: String) -> Bool {
-        guard word.count >= 2 else { return false }
-        return word.unicodeScalars.contains(where: isJapaneseScalar)
+        guard !word.isEmpty else { return false }
+        if word.unicodeScalars.contains(where: isKanji) {
+            return true
+        }
+        return word.count >= 2 && word.unicodeScalars.contains(where: isJapaneseScalar)
+    }
+
+    private func isKanji(_ scalar: UnicodeScalar) -> Bool {
+        (0x4E00...0x9FAF).contains(scalar.value)
     }
 
     private func isJapaneseScalar(_ scalar: UnicodeScalar) -> Bool {
         let value = scalar.value
         let isHiragana = (0x3040...0x309F).contains(value)
         let isKatakana = (0x30A0...0x30FF).contains(value)
-        let isKanji = (0x4E00...0x9FAF).contains(value)
-        return isHiragana || isKatakana || isKanji
+        return isHiragana || isKatakana || isKanji(scalar)
     }
 
     private func makeVocabularyItem(for word: String) -> VocabularyItem {

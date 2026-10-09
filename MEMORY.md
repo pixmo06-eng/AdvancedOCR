@@ -62,3 +62,5 @@
 - [x] Added `EditPageTextSheet` to allow direct correction of misread OCR text and instant Local AI re-analysis.
 - [x] Added `JapaneseLearningDataTests` and expanded test suite to 13 passing unit tests.
 - [ ] Next: Settings view for entering Gemini API key and choosing study preferences.
+- [x] Single-kanji extraction fix, strictly page-specific Study sheet, Local AI model, OCR text editor.
+- [x] Add pages to an existing lesson: `+` in `BookReaderView` toolbar -> scanner -> `LessonListViewModel.appendPages` (OCR continues page index/category, analysis per new page, merged lesson persisted).

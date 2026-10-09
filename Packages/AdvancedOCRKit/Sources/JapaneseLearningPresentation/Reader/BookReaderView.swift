@@ -5,20 +5,24 @@ public struct BookReaderView: View {
     @State var lesson: Lesson
     let allVocabulary: [VocabularyItem]
     let allGrammar: [GrammarItem]
+    let onAddPages: ((UUID, [Data]) async -> Lesson?)?
 
     @State private var selectedPageIndex: Int = 0
     @State private var showExtractedText: Bool = false
     @State private var showStudySheet: Bool = false
     @State private var showEditTextSheet: Bool = false
+    @State private var showAddScanner: Bool = false
 
     public init(
         lesson: Lesson,
         allVocabulary: [VocabularyItem] = [],
-        allGrammar: [GrammarItem] = []
+        allGrammar: [GrammarItem] = [],
+        onAddPages: ((UUID, [Data]) async -> Lesson?)? = nil
     ) {
         self._lesson = State(initialValue: lesson)
         self.allVocabulary = allVocabulary
         self.allGrammar = allGrammar
+        self.onAddPages = onAddPages
     }
 
     private var currentPage: LessonPage? {
@@ -48,6 +52,21 @@ public struct BookReaderView: View {
                     onSave: handlePageSave
                 )
             }
+        }
+        .toolbar {
+            if onAddPages != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: { showAddScanner = true }) {
+                        Label("Add Pages", systemImage: "plus")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAddScanner) {
+            DocumentCameraScannerView(
+                onComplete: handleAddedPages,
+                onCancel: { showAddScanner = false }
+            )
         }
     }
 
@@ -218,5 +237,16 @@ public struct BookReaderView: View {
     private func handlePageSave(_ updatedPage: LessonPage) {
         guard selectedPageIndex < lesson.pages.count else { return }
         lesson.pages[selectedPageIndex] = updatedPage
+    }
+
+    private func handleAddedPages(_ pagesData: [Data]) {
+        showAddScanner = false
+        guard let onAddPages else { return }
+        let firstNewIndex = lesson.pages.count
+        Task {
+            guard let updated = await onAddPages(lesson.id, pagesData) else { return }
+            lesson = updated
+            selectedPageIndex = min(firstNewIndex, max(updated.pages.count - 1, 0))
+        }
     }
 }

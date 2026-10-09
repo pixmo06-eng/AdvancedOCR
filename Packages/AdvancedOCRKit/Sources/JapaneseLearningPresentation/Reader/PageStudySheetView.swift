@@ -6,9 +6,11 @@ public struct PageStudySheetView: View {
     let page: LessonPage
     @State private var selectedTab: StudyTab = .vocabulary
     @State private var selectedCardItem: VocabularyItem?
+    @State private var pageVocabulary: [VocabularyItem] = []
+    @State private var pageGrammar: [GrammarItem] = []
+    @State private var isLoading: Bool = false
     @State private var localAIModel: LocalJapaneseAIModel = LocalJapaneseAIModel()
     @State private var aiGeneratedExamples: [UUID: [DailyLifeExample]] = [:]
-    @State private var isGeneratingAI: Bool = false
 
     public enum StudyTab: String, CaseIterable {
         case vocabulary = "Vocabulary"
@@ -29,9 +31,13 @@ public struct PageStudySheetView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbar { toolbarContent }
             .sheet(item: $selectedCardItem) { item in
                 VocabularyCardView(item: updatedItemWithAI(item))
                     .presentationDetents([.medium])
+            }
+            .task {
+                await loadPageContent()
             }
         }
     }
@@ -41,7 +47,7 @@ public struct PageStudySheetView: View {
             badgeView(title: page.pageCode, color: .blue)
             badgeView(title: page.category, color: .purple)
             Spacer()
-            Text("Page Specific Study")
+            Text("Page-Specific Study")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -62,20 +68,26 @@ public struct PageStudySheetView: View {
 
     private var contentSection: some View {
         VStack(spacing: 0) {
-            Picker("Content", selection: $selectedTab) {
-                Text("Vocabulary (\(page.vocabulary.count))").tag(StudyTab.vocabulary)
-                Text("Grammar (\(page.grammar.count))").tag(StudyTab.grammar)
-            }
-            .pickerStyle(.segmented)
-            .padding()
-
+            tabPicker
             tabContent
         }
     }
 
+    private var tabPicker: some View {
+        Picker("Content", selection: $selectedTab) {
+            Text("Vocabulary (\(pageVocabulary.count))").tag(StudyTab.vocabulary)
+            Text("Grammar (\(pageGrammar.count))").tag(StudyTab.grammar)
+        }
+        .pickerStyle(.segmented)
+        .padding()
+    }
+
     @ViewBuilder
     private var tabContent: some View {
-        if selectedTab == .vocabulary {
+        if isLoading {
+            ProgressView("Analyzing page text with Local AI...")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if selectedTab == .vocabulary {
             vocabList
         } else {
             grammarList
@@ -83,7 +95,7 @@ public struct PageStudySheetView: View {
     }
 
     private var vocabList: some View {
-        List(page.vocabulary) { item in
+        List(pageVocabulary) { item in
             VStack(alignment: .leading, spacing: 6) {
                 vocabRowButton(item: item)
                 aiSentenceButton(item: item)
@@ -91,8 +103,8 @@ public struct PageStudySheetView: View {
             .padding(.vertical, 4)
         }
         .overlay {
-            if page.vocabulary.isEmpty {
-                ContentUnavailableView("No Vocabulary for this Page", systemImage: "character.book.closed")
+            if pageVocabulary.isEmpty && !isLoading {
+                ContentUnavailableView("No Vocabulary Found on this Page", systemImage: "character.book.closed")
             }
         }
     }
@@ -117,7 +129,7 @@ public struct PageStudySheetView: View {
     private func aiSentenceButton(item: VocabularyItem) -> some View {
         Button(action: { generateSentences(for: item) }) {
             Label(
-                aiGeneratedExamples[item.id] != nil ? "AI Sentences Generated ✓" : "Make Sentences with Local AI",
+                aiGeneratedExamples[item.id] != nil ? "AI Sentences Ready ✓" : "Make Sentences with Local AI",
                 systemImage: "wand.and.stars"
             )
             .font(.caption2)
@@ -128,7 +140,7 @@ public struct PageStudySheetView: View {
     }
 
     private var grammarList: some View {
-        List(page.grammar) { item in
+        List(pageGrammar) { item in
             NavigationLink(destination: GrammarCardView(item: item)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.pattern).font(.headline)
@@ -138,18 +150,73 @@ public struct PageStudySheetView: View {
             }
         }
         .overlay {
-            if page.grammar.isEmpty {
-                ContentUnavailableView("No Grammar for this Page", systemImage: "book.pages")
+            if pageGrammar.isEmpty && !isLoading {
+                ContentUnavailableView("No Grammar Patterns Found on this Page", systemImage: "book.pages")
             }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Button(action: { Task { await forceReextract() } }) {
+                Image(systemName: "arrow.clockwise")
+            }
+            .disabled(isLoading)
+        }
+    }
+
+    private func loadPageContent() async {
+        let matchingVocab = filterPageVocab(page.vocabulary)
+        let matchingGrammar = filterPageGrammar(page.grammar)
+
+        if !matchingVocab.isEmpty || !matchingGrammar.isEmpty {
+            pageVocabulary = matchingVocab
+            pageGrammar = matchingGrammar
+            return
+        }
+
+        await forceReextract()
+    }
+
+    private func forceReextract() async {
+        isLoading = true
+        let rawText = page.extractedText
+        let vocab = await localAIModel.suggestVocabulary(
+            from: rawText,
+            pageCode: page.pageCode,
+            category: page.category,
+            lessonId: page.id
+        )
+        let grammar = await localAIModel.extractGrammar(
+            from: rawText,
+            pageCode: page.pageCode,
+            category: page.category,
+            lessonId: page.id
+        )
+
+        pageVocabulary = filterPageVocab(vocab)
+        pageGrammar = filterPageGrammar(grammar)
+        isLoading = false
+    }
+
+    private func filterPageVocab(_ items: [VocabularyItem]) -> [VocabularyItem] {
+        items.filter { item in
+            page.extractedText.contains(item.word) || page.extractedText.contains(item.reading)
+        }
+    }
+
+    private func filterPageGrammar(_ items: [GrammarItem]) -> [GrammarItem] {
+        items.filter { item in
+            let keyword = item.pattern.replacingOccurrences(of: "〜", with: "")
+            return page.extractedText.contains(keyword)
         }
     }
 
     private func generateSentences(for item: VocabularyItem) {
         Task {
-            isGeneratingAI = true
             let examples = await localAIModel.generateSentences(for: item.word, reading: item.reading, meaning: item.meaning)
             aiGeneratedExamples[item.id] = examples
-            isGeneratingAI = false
             selectedCardItem = updatedItemWithAI(item)
         }
     }

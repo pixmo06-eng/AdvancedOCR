@@ -56,7 +56,10 @@ public struct LessonListView: View {
                 NavigationLink(destination: BookReaderView(
                     lesson: lesson,
                     allVocabulary: viewModel.vocabularyList,
-                    allGrammar: viewModel.grammarList
+                    allGrammar: viewModel.grammarList,
+                    onAddPages: { id, pages in
+                        await viewModel.appendPages(to: id, pagesData: pages)
+                    }
                 )) {
                     lessonRow(lesson: lesson)
                 }

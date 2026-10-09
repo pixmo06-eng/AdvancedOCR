@@ -70,12 +70,60 @@ public final class LessonListViewModel {
         }
     }
 
-    private func performOCROnPages(pagesData: [Data]) async throws -> [LessonPage] {
+    /// Appends newly scanned pages to an existing lesson and returns the updated lesson.
+    public func appendPages(to lessonId: UUID, pagesData: [Data]) async -> Lesson? {
+        guard !pagesData.isEmpty,
+              let existing = lessons.first(where: { $0.id == lessonId }) else { return nil }
+        isProcessing = true
+        statusMessage = "Extracting Japanese text from new pages..."
+        errorMessage = nil
+        defer {
+            isProcessing = false
+            statusMessage = nil
+        }
+
+        do {
+            let merged = try await analyzeAndMerge(existing: existing, pagesData: pagesData)
+            try await repository.saveLesson(merged)
+            if let index = lessons.firstIndex(where: { $0.id == lessonId }) {
+                lessons[index] = merged
+            }
+            vocabularyList = try await repository.fetchAllVocabulary()
+            grammarList = try await repository.fetchAllGrammar()
+            return merged
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
+    private func analyzeAndMerge(existing: Lesson, pagesData: [Data]) async throws -> Lesson {
+        let newPages = try await performOCROnPages(
+            pagesData: pagesData,
+            startIndex: existing.pages.count,
+            initialCategory: existing.pages.last?.category
+        )
+        statusMessage = "Analyzing vocabulary & grammar with AI..."
+        let partial = Lesson(id: existing.id, title: existing.title, pages: newPages)
+        let analyzed = try await analyzeLessonUseCase.execute(lesson: partial)
+        var merged = existing
+        merged.pages.append(contentsOf: analyzed.pages)
+        merged.vocabularyIds.append(contentsOf: analyzed.vocabularyIds)
+        merged.grammarIds.append(contentsOf: analyzed.grammarIds)
+        return merged
+    }
+
+    private func performOCROnPages(
+        pagesData: [Data],
+        startIndex: Int = 0,
+        initialCategory: String? = nil
+    ) async throws -> [LessonPage] {
         var pages: [LessonPage] = []
-        var activeCategory: String? = nil
+        var activeCategory: String? = initialCategory
         let parser = LessonHeaderParser()
 
-        for (index, data) in pagesData.enumerated() {
+        for (offset, data) in pagesData.enumerated() {
+            let index = startIndex + offset
             let scanResult = try await ocrService.recognizeText(from: data)
             let header = parser.parse(text: scanResult.fullText, fallbackIndex: index, currentCategory: activeCategory)
             if let detected = header.category {
