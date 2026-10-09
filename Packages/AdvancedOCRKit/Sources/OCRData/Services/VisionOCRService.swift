@@ -12,21 +12,35 @@ public final class VisionOCRService: OCRServiceProtocol {
               let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
             throw AppError.invalidImageData
         }
-        return try await performRecognition(on: cgImage)
+        let orientation = extractOrientation(from: imageSource)
+        return try await performRecognition(on: cgImage, orientation: orientation)
     }
 
-    private func performRecognition(on cgImage: CGImage) async throws -> ScanResult {
+    private func extractOrientation(from source: CGImageSource) -> CGImagePropertyOrientation {
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let rawValue = properties[kCGImagePropertyOrientation] as? UInt32,
+              let orientation = CGImagePropertyOrientation(rawValue: rawValue) else {
+            return .up
+        }
+        return orientation
+    }
+
+    private func performRecognition(
+        on cgImage: CGImage,
+        orientation: CGImagePropertyOrientation
+    ) async throws -> ScanResult {
         try await withCheckedThrowingContinuation { continuation in
-            self.startRecognition(on: cgImage, continuation: continuation)
+            self.startRecognition(on: cgImage, orientation: orientation, continuation: continuation)
         }
     }
 
     private func startRecognition(
         on cgImage: CGImage,
+        orientation: CGImagePropertyOrientation,
         continuation: CheckedContinuation<ScanResult, Error>
     ) {
         let request = makeTextRequest(continuation: continuation)
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
         do {
             try handler.perform([request])
         } catch {
@@ -45,6 +59,7 @@ public final class VisionOCRService: OCRServiceProtocol {
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
         request.recognitionLanguages = ["ja-JP", "ja", "en-US"]
+        request.revision = VNRecognizeTextRequestRevision3
         return request
     }
 

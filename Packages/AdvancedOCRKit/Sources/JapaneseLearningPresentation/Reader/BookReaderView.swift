@@ -2,20 +2,21 @@ import SwiftUI
 import JapaneseLearningDomain
 
 public struct BookReaderView: View {
-    let lesson: Lesson
+    @State var lesson: Lesson
     let allVocabulary: [VocabularyItem]
     let allGrammar: [GrammarItem]
 
     @State private var selectedPageIndex: Int = 0
     @State private var showExtractedText: Bool = false
     @State private var showStudySheet: Bool = false
+    @State private var showEditTextSheet: Bool = false
 
     public init(
         lesson: Lesson,
         allVocabulary: [VocabularyItem] = [],
         allGrammar: [GrammarItem] = []
     ) {
-        self.lesson = lesson
+        self._lesson = State(initialValue: lesson)
         self.allVocabulary = allVocabulary
         self.allGrammar = allGrammar
     }
@@ -37,10 +38,14 @@ public struct BookReaderView: View {
         #endif
         .sheet(isPresented: $showStudySheet) {
             if let page = currentPage {
-                PageStudySheetView(
-                    page: page,
-                    allVocabulary: allVocabulary,
-                    allGrammar: allGrammar
+                PageStudySheetView(page: page)
+            }
+        }
+        .sheet(isPresented: $showEditTextSheet) {
+            if selectedPageIndex < lesson.pages.count {
+                EditPageTextSheet(
+                    page: $lesson.pages[selectedPageIndex],
+                    onSave: handlePageSave
                 )
             }
         }
@@ -50,6 +55,7 @@ public struct BookReaderView: View {
         HStack {
             pageMetadataBadges
             Spacer()
+            editTextButton
             studyPageButton
             textToggleSwitch
         }
@@ -79,6 +85,15 @@ public struct BookReaderView: View {
                     .clipShape(Capsule())
             }
         }
+    }
+
+    private var editTextButton: some View {
+        Button(action: { showEditTextSheet = true }) {
+            Image(systemName: "pencil")
+                .font(.footnote)
+        }
+        .buttonStyle(.bordered)
+        .tint(.gray)
     }
 
     private var studyPageButton: some View {
@@ -198,5 +213,10 @@ public struct BookReaderView: View {
     private func goToNextPage() {
         guard selectedPageIndex < lesson.pages.count - 1 else { return }
         selectedPageIndex += 1
+    }
+
+    private func handlePageSave(_ updatedPage: LessonPage) {
+        guard selectedPageIndex < lesson.pages.count else { return }
+        lesson.pages[selectedPageIndex] = updatedPage
     }
 }

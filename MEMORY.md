@@ -23,17 +23,19 @@
   - `OCRPresentation`: SwiftUI Views (`ScannerView`) and `@Observable` ViewModels (`ScannerViewModel`).
   - `JapaneseLearningDomain`: Pure Swift domain layer:
     - Entities: `Lesson`, `LessonPage`, `VocabularyItem`, `GrammarItem`, `DailyLifeExample`, `MasteryStatus`.
-    - Protocols: `LessonRepositoryProtocol`, `JapaneseAIServiceProtocol`.
-    - Services: `LessonHeaderParser` (extracts Kumon/textbook page codes like `A 2a`, `A 1b` and categories like `Kanji 1`, `Kanji 2`, propagates category context).
+    - Protocols: `LessonRepositoryProtocol`, `JapaneseAIServiceProtocol`, `LocalJapaneseAIProtocol`.
+    - Services: `LessonHeaderParser`, `JapaneseTextCleaner` (cleans split kana and OCR spacing artifacts).
     - Use Cases: `FilterDuplicateVocabularyUseCase`, `FilterDuplicateGrammarUseCase`, `AnalyzeLessonUseCase`.
   - `JapaneseLearningData`: Data layer implementations:
     - `JapaneseNLPService`: On-device tokenization and POS tagging via Apple `NaturalLanguage`.
+    - `LocalJapaneseAIModel`: On-device local AI intelligence engine for instant sentence and grammar synthesis.
     - `GeminiStudyAIService`: Hybrid AI service with page tagging (`pageId`, `pageCode`, `category`) and offline fallback.
     - `LocalLessonRepository`: Thread-safe actor for local JSON persistence.
   - `JapaneseLearningPresentation`: Modern SwiftUI UI layer:
     - `DocumentCameraScannerView`: Multi-page camera scanning via `VNDocumentCameraViewController`.
     - `BookReaderView`: Digital lesson book reader with page turning, text toggle, and category/page badges.
-    - `PageStudySheetView`: Linked study drawer allowing users to jump directly to vocabulary & grammar for that page or full category.
+    - `PageStudySheetView`: Strictly page-specific study drawer displaying only the active page's vocabulary/grammar with Local AI sentence generation button.
+    - `EditPageTextSheet`: In-app OCR correction sheet with instant Local AI regeneration.
     - `VocabularyListView` & `VocabularyCardView`: Filterable vocab list with category chips, page tags, "NEW" badges, and interactive flashcards.
     - `GrammarListView` & `GrammarCardView`: Filterable grammar list with category chips, page tags, and conversational examples.
     - `LessonListView` & `LessonListViewModel`: Lessons dashboard and scan-to-analyze coordinator with automatic title generation.
@@ -53,4 +55,10 @@
 - [x] Linked vocabulary and grammar directly to each page with `pageId`, `pageCode`, and `category`.
 - [x] Added `PageStudySheetView` in `BookReaderView` to navigate directly to linked vocabulary/grammar from the reader screen.
 - [x] Added category filter chips to `VocabularyListView` and `GrammarListView`.
+- [x] Enhanced Vision OCR with EXIF orientation metadata handling and `VNRecognizeTextRequestRevision3`.
+- [x] Added `JapaneseTextCleaner` for normalizing split Kana and OCR artifacts.
+- [x] Enforced strictly page-specific vocabulary and grammar in `PageStudySheetView` and `LessonPage`.
+- [x] Implemented `LocalJapaneseAIModel` for instant on-device daily life sentence and grammar generation.
+- [x] Added `EditPageTextSheet` to allow direct correction of misread OCR text and instant Local AI re-analysis.
+- [x] Added `JapaneseLearningDataTests` and expanded test suite to 13 passing unit tests.
 - [ ] Next: Settings view for entering Gemini API key and choosing study preferences.

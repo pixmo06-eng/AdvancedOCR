@@ -52,6 +52,10 @@ let package = Package(
         .testTarget(
             name: "JapaneseLearningDomainTests",
             dependencies: ["JapaneseLearningDomain"]
+        ),
+        .testTarget(
+            name: "JapaneseLearningDataTests",
+            dependencies: ["JapaneseLearningDomain", "JapaneseLearningData"]
         )
     ]
 )

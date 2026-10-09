@@ -9,40 +9,50 @@ public final class AnalyzeLessonUseCase: AnalyzeLessonUseCaseProtocol {
     private let repository: LessonRepositoryProtocol
     private let vocabFilter: FilterDuplicateVocabularyUseCaseProtocol
     private let grammarFilter: FilterDuplicateGrammarUseCaseProtocol
+    private let textCleaner: JapaneseTextCleaner
 
     public init(
         aiService: JapaneseAIServiceProtocol,
         repository: LessonRepositoryProtocol,
         vocabFilter: FilterDuplicateVocabularyUseCaseProtocol = FilterDuplicateVocabularyUseCase(),
-        grammarFilter: FilterDuplicateGrammarUseCaseProtocol = FilterDuplicateGrammarUseCase()
+        grammarFilter: FilterDuplicateGrammarUseCaseProtocol = FilterDuplicateGrammarUseCase(),
+        textCleaner: JapaneseTextCleaner = JapaneseTextCleaner()
     ) {
         self.aiService = aiService
         self.repository = repository
         self.vocabFilter = vocabFilter
         self.grammarFilter = grammarFilter
+        self.textCleaner = textCleaner
     }
 
     public func execute(lesson: Lesson) async throws -> Lesson {
+        var updatedPages: [LessonPage] = []
         var allVocab: [VocabularyItem] = []
         var allGrammar: [GrammarItem] = []
 
         for page in lesson.pages {
-            let content = try await extractFromPage(page, lessonId: lesson.id)
+            var currentPage = page
+            let content = try await extractFromPage(currentPage, lessonId: lesson.id)
+            currentPage.vocabulary = content.vocabulary
+            currentPage.grammar = content.grammar
+            updatedPages.append(currentPage)
             allVocab.append(contentsOf: content.vocabulary)
             allGrammar.append(contentsOf: content.grammar)
         }
 
+        var lessonWithUpdatedPages = lesson
+        lessonWithUpdatedPages.pages = updatedPages
         let combined = ExtractedStudyContent(vocabulary: allVocab, grammar: allGrammar)
-        return try await persistAnalysis(lesson: lesson, content: combined)
+        return try await persistAnalysis(lesson: lessonWithUpdatedPages, content: combined)
     }
 
     private func extractFromPage(_ page: LessonPage, lessonId: UUID) async throws -> ExtractedStudyContent {
-        let trimmed = page.extractedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+        let cleaned = textCleaner.clean(text: page.extractedText)
+        guard !cleaned.isEmpty else {
             return ExtractedStudyContent(vocabulary: [], grammar: [])
         }
         return try await aiService.extractStudyContent(
-            from: page.extractedText,
+            from: cleaned,
             lessonId: lessonId,
             pageId: page.id,
             pageCode: page.pageCode,
