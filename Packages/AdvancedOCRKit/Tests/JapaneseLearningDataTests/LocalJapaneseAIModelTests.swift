@@ -3,14 +3,15 @@ import XCTest
 @testable import JapaneseLearningData
 
 final class LocalJapaneseAIModelTests: XCTestCase {
-    func testGenerateSentences_omitsEnglishAndUsesJapaneseScenario() async {
+    func testGenerateSentences_providesRomajiAndEnglish() async {
         let model = LocalJapaneseAIModel()
-        let examples = await model.generateSentences(for: "食べる", reading: "たべる", meaning: "")
+        let examples = await model.generateSentences(for: "食べる", reading: "たべる", meaning: "to eat")
 
         XCTAssertEqual(examples.count, 3)
         XCTAssertTrue(examples.contains(where: { $0.scenario == "日常生活" }))
         XCTAssertTrue(examples.contains(where: { $0.japanese.contains("食べる") }))
-        XCTAssertTrue(examples.allSatisfy { $0.english.isEmpty })
+        XCTAssertTrue(examples.allSatisfy { !$0.english.isEmpty })
+        XCTAssertTrue(examples.allSatisfy { !$0.displayRomaji.isEmpty })
     }
 
     func testExtractGrammar_detectsPoliteRequest() async {
@@ -24,7 +25,7 @@ final class LocalJapaneseAIModelTests: XCTestCase {
         XCTAssertNotNil(requestPattern)
         XCTAssertEqual(requestPattern?.pageCode, "A 2a")
         XCTAssertTrue(grammarItems.allSatisfy { item in
-            item.examples.allSatisfy { $0.english.isEmpty }
+            item.examples.allSatisfy { !$0.displayRomaji.isEmpty && !$0.english.isEmpty }
         })
     }
 
@@ -38,6 +39,7 @@ final class LocalJapaneseAIModelTests: XCTestCase {
         XCTAssertEqual(items.first?.pageCode, "A 1b")
         XCTAssertFalse(items.first?.examples.isEmpty ?? true)
         XCTAssertTrue(items.allSatisfy { !$0.word.isEmpty && !$0.word.contains("は") && !$0.word.contains("を") })
+        XCTAssertTrue(items.allSatisfy { !$0.displayRomaji.isEmpty })
     }
 
     func testVerifyVocabulary_filtersParticlesAndStrayNoise() async {

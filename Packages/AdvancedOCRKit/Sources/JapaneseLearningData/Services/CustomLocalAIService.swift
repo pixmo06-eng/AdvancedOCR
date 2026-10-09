@@ -123,28 +123,34 @@ public final class CustomLocalAIService: CustomLocalAIServiceProtocol {
 
         let prompt = """
         Analyze this Japanese lesson text and extract important vocabulary words and grammar patterns.
-        Strict rule: Omit any English. Output ONLY valid JSON matching this exact format:
+        Include romaji and english translations for both vocabulary and examples.
+        Output ONLY valid JSON matching this exact format:
         {
           "vocabulary": [
             {
-              "word": "単語",
-              "reading": "たんご",
-              "meaning": "",
+              "word": "勉強",
+              "reading": "べんきょう",
+              "romaji": "benkyou",
+              "meaning": "study",
               "partOfSpeech": "名詞",
-              "exampleJapanese": "例文",
-              "exampleReading": "れいぶん",
-              "scenario": "日常生活"
+              "exampleJapanese": "毎日勉強します。",
+              "exampleReading": "まいにち べんきょう します。",
+              "exampleRomaji": "mainichi benkyou shimasu.",
+              "exampleEnglish": "I study every day.",
+              "scenario": "日常練習"
             }
           ],
           "grammar": [
             {
-              "pattern": "文型",
-              "meaning": "意味（日本語）",
-              "formation": "接続",
-              "explanation": "解説（日本語）",
+              "pattern": "〜てください",
+              "meaning": "Please do",
+              "formation": "動詞て形 ＋ ください",
+              "explanation": "丁寧にお願いする表現",
               "jlptLevel": "N5",
-              "exampleJapanese": "例文",
-              "exampleReading": "れいぶん",
+              "exampleJapanese": "本を読んでください。",
+              "exampleReading": "ほんを よんで ください。",
+              "exampleRomaji": "hon wo yonde kudasai.",
+              "exampleEnglish": "Please read the book.",
               "scenario": "日常会話"
             }
           ]
@@ -156,7 +162,7 @@ public final class CustomLocalAIService: CustomLocalAIServiceProtocol {
         let payload: [String: Any] = [
             "model": config.selectedModel,
             "messages": [
-                ["role": "system", "content": "You are a Japanese language analysis assistant. You respond only with valid JSON with zero English."],
+                ["role": "system", "content": "You are a Japanese language analysis assistant. You respond only with valid JSON containing vocabulary, grammar, readings, romaji, and english translations."],
                 ["role": "user", "content": prompt]
             ],
             "temperature": 0.2
@@ -238,27 +244,37 @@ struct CustomStudyContentDTO: Codable {
 struct CustomVocabDTO: Codable {
     let word: String
     let reading: String?
+    let romaji: String?
     let meaning: String?
     let partOfSpeech: String?
     let exampleJapanese: String?
     let exampleReading: String?
+    let exampleRomaji: String?
+    let exampleEnglish: String?
     let scenario: String?
 
     func toDomain(lessonId: UUID, pageCode: String?, category: String?) -> VocabularyItem {
         let cleanWord = word.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanReading = reading?.trimmingCharacters(in: .whitespacesAndNewlines) ?? cleanWord
-        let cleanMeaning = meaning?.contains(where: \.isASCII) == true ? "" : (meaning ?? "")
-        let cleanPOS = partOfSpeech?.contains(where: \.isASCII) == true ? "語彙" : (partOfSpeech ?? "語彙")
+        let cleanRomaji = romaji?.trimmingCharacters(in: .whitespacesAndNewlines) ?? JapaneseRomajiConverter.toRomaji(from: cleanReading)
+        let cleanMeaning = meaning?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let cleanPOS = partOfSpeech?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "語彙"
+        let exJap = exampleJapanese ?? "\(cleanWord)を使います。"
+        let exReading = exampleReading ?? cleanReading
+        let exRomaji = exampleRomaji ?? JapaneseRomajiConverter.toRomaji(from: exReading)
+        let exEng = exampleEnglish ?? "Example using \(cleanWord)"
         let example = DailyLifeExample(
-            japanese: exampleJapanese ?? "\(cleanWord)を使います。",
-            reading: exampleReading ?? cleanReading,
-            english: "",
-            scenario: scenario?.contains(where: \.isASCII) == true ? "日常生活" : (scenario ?? "日常生活")
+            japanese: exJap,
+            reading: exReading,
+            romaji: exRomaji,
+            english: exEng,
+            scenario: scenario ?? "日常生活"
         )
 
         return VocabularyItem(
             word: cleanWord,
             reading: cleanReading,
+            romaji: cleanRomaji,
             meaning: cleanMeaning,
             partOfSpeech: cleanPOS,
             isNewWord: true,
@@ -278,16 +294,23 @@ struct CustomGrammarDTO: Codable {
     let jlptLevel: String?
     let exampleJapanese: String?
     let exampleReading: String?
+    let exampleRomaji: String?
+    let exampleEnglish: String?
     let scenario: String?
 
     func toDomain(lessonId: UUID, pageCode: String?, category: String?) -> GrammarItem {
         let cleanPattern = pattern.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanMeaning = meaning?.contains(where: \.isASCII) == true ? "" : (meaning ?? "")
+        let cleanMeaning = meaning?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let exJap = exampleJapanese ?? cleanPattern
+        let exReading = exampleReading ?? ""
+        let exRomaji = exampleRomaji ?? JapaneseRomajiConverter.toRomaji(from: exReading.isEmpty ? exJap : exReading)
+        let exEng = exampleEnglish ?? "Example using \(cleanPattern)"
         let example = DailyLifeExample(
-            japanese: exampleJapanese ?? cleanPattern,
-            reading: exampleReading ?? "",
-            english: "",
-            scenario: scenario?.contains(where: \.isASCII) == true ? "文法練習" : (scenario ?? "文法練習")
+            japanese: exJap,
+            reading: exReading,
+            romaji: exRomaji,
+            english: exEng,
+            scenario: scenario ?? "文法練習"
         )
 
         return GrammarItem(
@@ -304,3 +327,4 @@ struct CustomGrammarDTO: Codable {
         )
     }
 }
+

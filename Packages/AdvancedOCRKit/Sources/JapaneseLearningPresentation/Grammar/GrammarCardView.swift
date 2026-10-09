@@ -27,7 +27,7 @@ public struct GrammarCardView: View {
                 Text(item.pattern)
                     .font(.title)
                     .fontWeight(.bold)
-                if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                if !item.meaning.isEmpty {
                     Text(item.meaning)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -97,12 +97,23 @@ public struct GrammarCardView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Text(example.displayRomaji)
+                .font(.caption2)
+                .foregroundStyle(.purple)
+
+            if !example.english.isEmpty {
+                Text(example.english)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.secondary.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
+
 
     private var newBadge: some View {
         Text("新")

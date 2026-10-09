@@ -172,7 +172,10 @@ public struct PageStudySheetView: View {
                     if !item.reading.isEmpty && item.reading != item.word {
                         Text(item.reading).font(.caption).foregroundStyle(.secondary)
                     }
-                    if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                    Text(item.displayRomaji)
+                        .font(.caption2)
+                        .foregroundStyle(.purple)
+                    if !item.meaning.isEmpty {
                         Text(item.meaning).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
@@ -203,7 +206,7 @@ public struct PageStudySheetView: View {
             NavigationLink(destination: GrammarCardView(item: item)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.pattern).font(.headline)
-                    if !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII) {
+                    if !item.meaning.isEmpty {
                         Text(item.meaning).font(.caption).foregroundStyle(.secondary)
                     }
                     Text(item.formation).font(.caption2).foregroundStyle(.blue)
@@ -216,6 +219,7 @@ public struct PageStudySheetView: View {
             }
         }
     }
+
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {

@@ -189,19 +189,24 @@ public struct VocabularyListView: View {
 
     @ViewBuilder
     private func detailsRow(item: VocabularyItem) -> some View {
-        let hasJapaneseMeaning = !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII)
-        let hasJapanesePOS = !item.partOfSpeech.isEmpty && !item.partOfSpeech.unicodeScalars.contains(where: \.isASCII)
+        VStack(alignment: .leading, spacing: 2) {
+            Text(item.displayRomaji)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.purple)
 
-        if hasJapaneseMeaning {
-            Text(item.meaning)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        } else if hasJapanesePOS {
-            Text(item.partOfSpeech)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            if !item.meaning.isEmpty {
+                Text(item.meaning)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else if !item.partOfSpeech.isEmpty {
+                Text(item.partOfSpeech)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
+
 
     private func itemBadgeColumn(item: VocabularyItem) -> some View {
         VStack(alignment: .trailing, spacing: 4) {

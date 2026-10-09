@@ -37,7 +37,7 @@ public struct VocabularyCardView: View {
     }
 
     private var cardFront: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             topBadgesRow
             Spacer()
             if !item.reading.isEmpty && item.reading != item.word {
@@ -46,7 +46,18 @@ public struct VocabularyCardView: View {
                     .foregroundStyle(.secondary)
             }
             Text(item.word)
-                .font(.system(size: 42, weight: .bold))
+                .font(.system(size: 40, weight: .bold))
+
+            Text(item.displayRomaji)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.purple)
+
+            if !item.meaning.isEmpty {
+                Text(item.meaning)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
             Spacer()
             Text("タップして詳細を表示")
                 .font(.caption)
@@ -79,15 +90,22 @@ public struct VocabularyCardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            Text(item.displayRomaji)
+                .font(.subheadline)
+                .foregroundStyle(.purple)
+
+            if !item.meaning.isEmpty {
+                Text(item.meaning)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+            }
             badgesRow
-            meaningRow
         }
     }
 
     @ViewBuilder
     private var badgesRow: some View {
-        let hasJapanesePOS = !item.partOfSpeech.isEmpty && !item.partOfSpeech.unicodeScalars.contains(where: \.isASCII)
-        if hasJapanesePOS {
+        if !item.partOfSpeech.isEmpty {
             Text(item.partOfSpeech)
                 .font(.caption)
                 .padding(.horizontal, 8)
@@ -95,16 +113,6 @@ public struct VocabularyCardView: View {
                 .background(Color.blue.opacity(0.1))
                 .foregroundStyle(.blue)
                 .clipShape(Capsule())
-        }
-    }
-
-    @ViewBuilder
-    private var meaningRow: some View {
-        let hasJapaneseMeaning = !item.meaning.isEmpty && !item.meaning.unicodeScalars.contains(where: \.isASCII)
-        if hasJapaneseMeaning {
-            Text(item.meaning)
-                .font(.body)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -137,6 +145,16 @@ public struct VocabularyCardView: View {
             if !example.reading.isEmpty && example.reading != example.japanese {
                 Text(example.reading)
                     .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(example.displayRomaji)
+                .font(.caption2)
+                .foregroundStyle(.purple)
+
+            if !example.english.isEmpty {
+                Text(example.english)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }

@@ -173,13 +173,13 @@ public final class LocalJapaneseAIModel: LocalJapaneseAIProtocol {
     }
 
     private func buildVerifiedItem(from item: VocabularyItem, word: String, pos: String) -> VocabularyItem {
-        let cleanMeaning = item.meaning.contains(where: \.isASCII) ? "" : item.meaning
         let cleanExamples = sanitizeExamples(item.examples)
         return VocabularyItem(
             id: item.id,
             word: word,
             reading: item.reading.isEmpty ? word : item.reading,
-            meaning: cleanMeaning,
+            romaji: item.displayRomaji,
+            meaning: item.meaning,
             partOfSpeech: pos,
             jlptLevel: item.jlptLevel,
             isNewWord: item.isNewWord,
@@ -200,8 +200,9 @@ public final class LocalJapaneseAIModel: LocalJapaneseAIProtocol {
                 id: example.id,
                 japanese: example.japanese,
                 reading: example.reading,
-                english: "",
-                scenario: example.scenario.contains(where: \.isASCII) ? "日常練習" : example.scenario
+                romaji: example.displayRomaji,
+                english: example.english.isEmpty ? "Example using \(example.japanese)" : example.english,
+                scenario: example.scenario
             )
         }
     }
@@ -220,53 +221,62 @@ public final class LocalJapaneseAIModel: LocalJapaneseAIProtocol {
     ]
 
     private func makeRoutineExample(for word: String) -> DailyLifeExample {
-        DailyLifeExample(
+        let reading = "まいにちの せいかつで「\(word)」を よく つかいます。"
+        return DailyLifeExample(
             japanese: "毎日の生活で「\(word)」をよく使います。",
-            reading: "まいにちの せいかつで「\(word)」を よく つかいます。",
-            english: "",
+            reading: reading,
+            romaji: JapaneseRomajiConverter.toRomaji(from: reading),
+            english: "I often use \"\(word)\" in daily life.",
             scenario: "日常生活"
         )
     }
 
     private func makeServiceExample(for word: String) -> DailyLifeExample {
-        DailyLifeExample(
+        let reading = "おみせで「\(word)」について たずねました。"
+        return DailyLifeExample(
             japanese: "お店で「\(word)」について尋ねました。",
-            reading: "おみせで「\(word)」について たずねました。",
-            english: "",
+            reading: reading,
+            romaji: JapaneseRomajiConverter.toRomaji(from: reading),
+            english: "I asked about \"\(word)\" at the shop.",
             scenario: "買い物・店舗"
         )
     }
 
     private func makeConversationExample(for word: String) -> DailyLifeExample {
-        DailyLifeExample(
+        let reading = "ともだちと いっしょに「\(word)」を はなしました。"
+        return DailyLifeExample(
             japanese: "友達と一緒に「\(word)」を話しました。",
-            reading: "ともだちと いっしょに「\(word)」を はなしました。",
-            english: "",
+            reading: reading,
+            romaji: JapaneseRomajiConverter.toRomaji(from: reading),
+            english: "I talked about \"\(word)\" with a friend.",
             scenario: "日常会話"
         )
     }
 
     private func makeGrammarExample(pattern: String, scenario: String) -> DailyLifeExample {
         let clean = pattern.replacingOccurrences(of: "〜", with: "")
+        let reading = "にちじょうかいわで \(clean)の ぶんけいを つかって はなします。"
         return DailyLifeExample(
             japanese: "日常会話で\(clean)の文型を使って話します。",
-            reading: "にちじょうかいわで \(clean)の ぶんけいを つかって はなします。",
-            english: "",
+            reading: reading,
+            romaji: JapaneseRomajiConverter.toRomaji(from: reading),
+            english: "Speaking using the \(pattern) structure in daily conversation.",
             scenario: scenario
         )
     }
 
     private func grammarRuleCatalog() -> [GrammarRuleDef] {
         [
-            GrammarRuleDef(keywords: ["てください", "でください"], pattern: "〜てください", meaning: "〜てください（依頼）", formation: "動詞て形 ＋ ください", explanation: "相手にていねいに行動をお願いするときに使います。", jlpt: "N5"),
-            GrammarRuleDef(keywords: ["てもいい", "でもいい"], pattern: "〜てもいい", meaning: "〜てもいい（許可）", formation: "動詞て形 ＋ もいい", explanation: "許可を求めたり与えたりするときに使います。", jlpt: "N5"),
-            GrammarRuleDef(keywords: ["てはいけない", "ではいけない"], pattern: "〜てはいけない", meaning: "〜てはいけない（禁止）", formation: "動詞て形 ＋ はいけない", explanation: "規則や強い禁止を表します。", jlpt: "N5"),
-            GrammarRuleDef(keywords: ["なければならない", "なきゃいけない"], pattern: "〜なければならない", meaning: "〜なければならない（義務）", formation: "動詞ない形 ＋ ければならない", explanation: "義務や必要な行動を表します。", jlpt: "N5"),
-            GrammarRuleDef(keywords: ["ている", "でいる"], pattern: "〜ている", meaning: "〜ている（進行・状態）", formation: "動詞て形 ＋ いる", explanation: "現在進行中の動作や継続する状態を表します。", jlpt: "N5"),
-            GrammarRuleDef(keywords: ["たことがある", "だことがある"], pattern: "〜たことがある", meaning: "〜たことがある（経験）", formation: "動詞た形 ＋ ことがある", explanation: "過去の経験を表します。", jlpt: "N5"),
-            GrammarRuleDef(keywords: ["たいです", "たい"], pattern: "〜たい", meaning: "〜たい（希望）", formation: "動詞ます形語幹 ＋ たい", explanation: "話し手の希望を表します。", jlpt: "N5")
+            GrammarRuleDef(keywords: ["てください", "でください"], pattern: "〜てください", meaning: "Please do (polite request)", formation: "動詞て形 ＋ ください", explanation: "相手にていねいに行動をお願いするときに使います。", jlpt: "N5"),
+            GrammarRuleDef(keywords: ["てもいい", "でもいい"], pattern: "〜てもいい", meaning: "May do / Permission", formation: "動詞て形 ＋ もいい", explanation: "許可を求めたり与えたりするときに使います。", jlpt: "N5"),
+            GrammarRuleDef(keywords: ["てはいけない", "ではいけない"], pattern: "〜てはいけない", meaning: "Must not do / Prohibition", formation: "動詞て形 ＋ はいけない", explanation: "規則や強い禁止を表します。", jlpt: "N5"),
+            GrammarRuleDef(keywords: ["なければならない", "なきゃいけない"], pattern: "〜なければならない", meaning: "Must do / Obligation", formation: "動詞ない形 ＋ ければならない", explanation: "義務や必要な行動を表します。", jlpt: "N5"),
+            GrammarRuleDef(keywords: ["ている", "でいる"], pattern: "〜ている", meaning: "Continuous action / Ongoing state", formation: "動詞て形 ＋ いる", explanation: "現在進行中の動作や継続する状態を表します。", jlpt: "N5"),
+            GrammarRuleDef(keywords: ["たことがある", "だことがある"], pattern: "〜たことがある", meaning: "Have done before (Experience)", formation: "動詞た形 ＋ ことがある", explanation: "過去の経験を表します。", jlpt: "N5"),
+            GrammarRuleDef(keywords: ["たいです", "たい"], pattern: "〜たい", meaning: "Want to do (Desire)", formation: "動詞ます形語幹 ＋ たい", explanation: "話し手の希望を表します。", jlpt: "N5")
         ]
     }
+
 }
 
 private struct GrammarRuleDef {

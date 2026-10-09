@@ -39,17 +39,20 @@ final class CustomLocalAIServiceTests: XCTestCase {
         XCTAssertTrue(names.contains("gemma2:9b"))
     }
 
-    func testStudyContentDTO_omitsEnglishAndMapsCorrectly() throws {
+    func testStudyContentDTO_mapsRomajiAndEnglishCorrectly() throws {
         let json = """
         {
           "vocabulary": [
             {
               "word": "漢字",
               "reading": "かんじ",
+              "romaji": "kanji",
               "meaning": "Chinese characters",
               "partOfSpeech": "名詞",
               "exampleJapanese": "漢字を毎日練習します。",
               "exampleReading": "かんじを まいにち れんしゅう します。",
+              "exampleRomaji": "kanji wo mainichi renshuu shimasu.",
+              "exampleEnglish": "I practice kanji every day.",
               "scenario": "Daily Life"
             }
           ],
@@ -58,10 +61,12 @@ final class CustomLocalAIServiceTests: XCTestCase {
               "pattern": "〜てください",
               "meaning": "Please do",
               "formation": "動詞て形＋ください",
-              "explanation": "丁寧な依頼",
+              "explanation": "Polite request",
               "jlptLevel": "N5",
               "exampleJapanese": "ここを読んでください。",
               "exampleReading": "ここを よんで ください。",
+              "exampleRomaji": "koko wo yonde kudasai.",
+              "exampleEnglish": "Please read here.",
               "scenario": "Conversation"
             }
           ]
@@ -75,13 +80,15 @@ final class CustomLocalAIServiceTests: XCTestCase {
 
         XCTAssertEqual(vocab.count, 1)
         XCTAssertEqual(vocab.first?.word, "漢字")
-        XCTAssertEqual(vocab.first?.meaning, "") // English omitted
-        XCTAssertEqual(vocab.first?.examples.first?.english, "") // English omitted
-        XCTAssertEqual(vocab.first?.examples.first?.scenario, "日常生活") // Sanitized to Japanese
+        XCTAssertEqual(vocab.first?.displayRomaji, "kanji")
+        XCTAssertEqual(vocab.first?.meaning, "Chinese characters")
+        XCTAssertEqual(vocab.first?.examples.first?.english, "I practice kanji every day.")
+        XCTAssertEqual(vocab.first?.examples.first?.displayRomaji, "kanji wo mainichi renshuu shimasu.")
 
         XCTAssertEqual(grammar.count, 1)
         XCTAssertEqual(grammar.first?.pattern, "〜てください")
-        XCTAssertEqual(grammar.first?.meaning, "") // English omitted
-        XCTAssertEqual(grammar.first?.examples.first?.english, "") // English omitted
+        XCTAssertEqual(grammar.first?.meaning, "Please do")
+        XCTAssertEqual(grammar.first?.examples.first?.english, "Please read here.")
+        XCTAssertEqual(grammar.first?.examples.first?.displayRomaji, "koko wo yonde kudasai.")
     }
 }

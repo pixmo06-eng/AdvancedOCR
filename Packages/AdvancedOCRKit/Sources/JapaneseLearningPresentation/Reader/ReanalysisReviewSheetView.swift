@@ -100,10 +100,33 @@ public struct ReanalysisReviewSheetView: View {
                             .clipShape(Capsule())
                     }
                 }
-                if let example = item.examples.first {
-                    Text(example.japanese)
-                        .font(.caption)
+                Text(item.displayRomaji)
+                    .font(.caption)
+                    .foregroundStyle(.purple)
+
+                if !item.meaning.isEmpty {
+                    Text(item.meaning)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+
+                if let example = item.examples.first {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(example.japanese)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        Text(example.displayRomaji)
+                            .font(.caption2)
+                            .foregroundStyle(.purple)
+                        if !example.english.isEmpty {
+                            Text(example.english)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(6)
+                    .background(Color.secondary.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }
             .padding(.vertical, 2)
@@ -125,10 +148,29 @@ public struct ReanalysisReviewSheetView: View {
                         .font(.caption2)
                         .foregroundStyle(.blue)
                 }
+                if let example = item.examples.first {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(example.japanese)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        Text(example.displayRomaji)
+                            .font(.caption2)
+                            .foregroundStyle(.purple)
+                        if !example.english.isEmpty {
+                            Text(example.english)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(6)
+                    .background(Color.secondary.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
             }
             .padding(.vertical, 2)
         }
     }
+
 
     private var actionButtonsBar: some View {
         HStack(spacing: 12) {
