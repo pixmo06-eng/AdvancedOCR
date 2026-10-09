@@ -21,8 +21,8 @@ public struct PageStudySheetView: View {
     @State private var aiGeneratedExamples: [UUID: [DailyLifeExample]] = [:]
 
     public enum StudyTab: String, CaseIterable {
-        case vocabulary = "語彙"
-        case grammar = "文法"
+        case vocabulary = "Vocabulary"
+        case grammar = "Grammar"
     }
 
     public init(
@@ -39,7 +39,7 @@ public struct PageStudySheetView: View {
                 headerBanner
                 contentSection
             }
-            .navigationTitle("学習: \(page.title)")
+            .navigationTitle("Study: \(page.title)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -62,7 +62,7 @@ public struct PageStudySheetView: View {
                     )
                 }
             }
-            .alert("エラー", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            .alert("Error", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
                 Button("OK") { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "")
@@ -99,7 +99,7 @@ public struct PageStudySheetView: View {
         Button(action: { Task { await triggerReanalysis() } }) {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                Text(isReanalyzing ? "再解析中..." : "再解析 (カスタムAI)")
+                Text(isReanalyzing ? "Re-analyzing..." : "Re-Analyze (Custom AI)")
             }
             .font(.caption2)
             .fontWeight(.bold)
@@ -120,9 +120,9 @@ public struct PageStudySheetView: View {
     }
 
     private var tabPicker: some View {
-        Picker("区分", selection: $selectedTab) {
-            Text("語彙 (\(pageVocabulary.count))").tag(StudyTab.vocabulary)
-            Text("文法 (\(pageGrammar.count))").tag(StudyTab.grammar)
+        Picker("Category", selection: $selectedTab) {
+            Text("Vocabulary (\(pageVocabulary.count))").tag(StudyTab.vocabulary)
+            Text("Grammar (\(pageGrammar.count))").tag(StudyTab.grammar)
         }
         .pickerStyle(.segmented)
         .padding()
@@ -142,7 +142,7 @@ public struct PageStudySheetView: View {
     private var loadingView: some View {
         VStack(spacing: 12) {
             ProgressView()
-            Text(isReanalyzing ? "ローカルAIサーバーで再解析中..." : "テキスト解析中...")
+            Text(isReanalyzing ? "Re-analyzing with local AI server..." : "Analyzing page text...")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -159,7 +159,7 @@ public struct PageStudySheetView: View {
         }
         .overlay {
             if pageVocabulary.isEmpty && !isLoading && !isReanalyzing {
-                ContentUnavailableView("このページの語彙は見つかりませんでした", systemImage: "character.book.closed")
+                ContentUnavailableView("No Vocabulary Found on this Page", systemImage: "character.book.closed")
             }
         }
     }
@@ -191,7 +191,7 @@ public struct PageStudySheetView: View {
     private func aiSentenceButton(item: VocabularyItem) -> some View {
         Button(action: { generateSentences(for: item) }) {
             Label(
-                aiGeneratedExamples[item.id] != nil ? "AI例文 作成済み ✓" : "AIで例文を作成",
+                aiGeneratedExamples[item.id] != nil ? "AI Sentences Ready ✓" : "Make Sentences with AI",
                 systemImage: "wand.and.stars"
             )
             .font(.caption2)
@@ -215,7 +215,7 @@ public struct PageStudySheetView: View {
         }
         .overlay {
             if pageGrammar.isEmpty && !isLoading && !isReanalyzing {
-                ContentUnavailableView("このページの文法は見つかりませんでした", systemImage: "book.pages")
+                ContentUnavailableView("No Grammar Patterns Found on this Page", systemImage: "book.pages")
             }
         }
     }
@@ -257,7 +257,7 @@ public struct PageStudySheetView: View {
             candidateContent = result
             isShowingReview = true
         } catch {
-            errorMessage = "再解析に失敗しました: \(error.localizedDescription)"
+            errorMessage = "Re-analysis failed: \(error.localizedDescription)"
         }
 
         isReanalyzing = false
@@ -363,7 +363,7 @@ public struct PageStudySheetView: View {
     }
 
     private var newBadge: some View {
-        Text("新")
+        Text("NEW")
             .font(.system(size: 10, weight: .heavy))
             .foregroundStyle(.white)
             .padding(.horizontal, 6)

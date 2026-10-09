@@ -59,7 +59,7 @@ public struct VocabularyCardView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text("タップして詳細を表示")
+            Text("Tap to reveal details")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -118,7 +118,7 @@ public struct VocabularyCardView: View {
 
     private var examplesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("日常生活の例文")
+            Text("Daily Life Examples")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -175,7 +175,7 @@ public struct VocabularyCardView: View {
     }
 
     private var newWordBadge: some View {
-        Text("新")
+        Text("NEW")
             .font(.caption2)
             .fontWeight(.heavy)
             .foregroundStyle(.white)
@@ -186,7 +186,7 @@ public struct VocabularyCardView: View {
     }
 
     private var occurrenceBadge: some View {
-        Text("\(item.occurrenceCount)回 登場")
+        Text("Seen \(item.occurrenceCount)x")
             .font(.caption2)
             .foregroundStyle(.secondary)
     }
@@ -197,7 +197,7 @@ public struct VocabularyCardView: View {
     }
 
     private var hintText: some View {
-        Text(isFlipped ? "タップして戻る" : "タップして詳細を見る")
+        Text(isFlipped ? "Tap card to flip back" : "Tap card to view details")
             .font(.caption2)
             .foregroundStyle(.tertiary)
     }

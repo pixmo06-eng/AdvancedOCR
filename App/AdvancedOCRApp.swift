@@ -43,22 +43,23 @@ struct AdvancedOCRApp: App {
     private var lessonsTab: some View {
         LessonListView(viewModel: lessonViewModel)
             .tabItem {
-                Label("レッスン", systemImage: "book.pages")
+                Label("Lessons", systemImage: "book.pages")
             }
     }
 
     private var vocabularyTab: some View {
         VocabularyListView(items: lessonViewModel.vocabularyList)
             .tabItem {
-                Label("語彙", systemImage: "character.book.closed")
+                Label("Vocabulary", systemImage: "character.book.closed")
             }
     }
 
     private var grammarTab: some View {
         GrammarListView(items: lessonViewModel.grammarList)
             .tabItem {
-                Label("文法", systemImage: "text.book.closed")
+                Label("Grammar", systemImage: "text.book.closed")
             }
     }
+
 
 }

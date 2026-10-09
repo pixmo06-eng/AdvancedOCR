@@ -42,7 +42,7 @@ public struct GrammarCardView: View {
 
     private var formationSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("接続・文型")
+            Text("Formation Rule")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -57,7 +57,7 @@ public struct GrammarCardView: View {
 
     private var explanationSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("解説")
+            Text("Explanation")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -68,7 +68,7 @@ public struct GrammarCardView: View {
 
     private var examplesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("例文")
+            Text("Daily Life Examples")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
@@ -116,7 +116,7 @@ public struct GrammarCardView: View {
 
 
     private var newBadge: some View {
-        Text("新")
+        Text("NEW")
             .font(.caption)
             .fontWeight(.heavy)
             .foregroundStyle(.white)

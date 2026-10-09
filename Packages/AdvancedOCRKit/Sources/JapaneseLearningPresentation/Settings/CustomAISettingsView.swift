@@ -35,7 +35,7 @@ public struct CustomAISettingsView: View {
                 modelSection
                 statusSection
             }
-            .navigationTitle("ローカルAIサーバー設定")
+            .navigationTitle("Local AI Server Settings")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -49,19 +49,19 @@ public struct CustomAISettingsView: View {
     }
 
     private var endpointSection: some View {
-        Section(header: Text("サーバー接続先")) {
-            TextField("エンドポイントURL", text: $endpoint)
+        Section(header: Text("Server Endpoint")) {
+            TextField("Endpoint URL", text: $endpoint)
                 .autocorrectionDisabled()
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.URL)
                 #endif
-            SecureField("APIキー (任意)", text: $apiKey)
+            SecureField("API Key (Optional)", text: $apiKey)
         }
     }
 
     private var presetsSection: some View {
-        Section(header: Text("プリセット")) {
+        Section(header: Text("Presets")) {
             HStack(spacing: 8) {
                 Button("Ollama (11434)") {
                     endpoint = "http://localhost:11434/v1"
@@ -79,10 +79,10 @@ public struct CustomAISettingsView: View {
     }
 
     private var modelSection: some View {
-        Section(header: Text("モデル")) {
+        Section(header: Text("Model")) {
             Button(action: { Task { await fetchModels() } }) {
                 HStack {
-                    Label(isLoadingModels ? "モデル取得中..." : "モデル一覧を取得", systemImage: "arrow.triangle.2.circlepath")
+                    Label(isLoadingModels ? "Fetching Models..." : "Fetch Models", systemImage: "arrow.triangle.2.circlepath")
                     Spacer()
                     if isLoadingModels {
                         ProgressView()
@@ -92,13 +92,13 @@ public struct CustomAISettingsView: View {
             .disabled(isLoadingModels || endpoint.isEmpty)
 
             if !availableModels.isEmpty {
-                Picker("使用モデル", selection: $selectedModel) {
+                Picker("Selected Model", selection: $selectedModel) {
                     ForEach(availableModels, id: \.self) { model in
                         Text(model).tag(model)
                     }
                 }
             } else if !selectedModel.isEmpty {
-                Text("現在: \(selectedModel)")
+                Text("Current: \(selectedModel)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -119,10 +119,10 @@ public struct CustomAISettingsView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("閉じる") { dismiss() }
+            Button("Cancel") { dismiss() }
         }
         ToolbarItem(placement: .confirmationAction) {
-            Button("保存") { saveSettings() }
+            Button("Save") { saveSettings() }
                 .fontWeight(.bold)
         }
     }
@@ -138,10 +138,10 @@ public struct CustomAISettingsView: View {
             if selectedModel.isEmpty || !fetched.contains(selectedModel) {
                 selectedModel = fetched.first ?? ""
             }
-            statusMessage = "\(fetched.count)個のモデルを検出しました"
+            statusMessage = "Found \(fetched.count) models"
             isError = false
         } catch {
-            statusMessage = "接続失敗: サーバーURLを確認してください"
+            statusMessage = "Connection failed: Please check server URL"
             isError = true
         }
 

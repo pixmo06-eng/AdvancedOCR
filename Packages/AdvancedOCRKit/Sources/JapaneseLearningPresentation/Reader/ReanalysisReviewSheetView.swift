@@ -12,8 +12,8 @@ public struct ReanalysisReviewSheetView: View {
     @State private var selectedTab: ReviewTab = .vocabulary
 
     public enum ReviewTab: String, CaseIterable {
-        case vocabulary = "語彙"
-        case grammar = "文法"
+        case vocabulary = "Vocabulary"
+        case grammar = "Grammar"
     }
 
     public init(
@@ -38,7 +38,7 @@ public struct ReanalysisReviewSheetView: View {
                 tabContent
                 actionButtonsBar
             }
-            .navigationTitle("再解析結果の確認")
+            .navigationTitle("Review Re-Analysis Results")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -47,11 +47,11 @@ public struct ReanalysisReviewSheetView: View {
 
     private var summaryBanner: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("ローカルAIサーバーによる解析完了")
+            Text("Local AI Server Analysis Complete")
                 .font(.footnote)
                 .fontWeight(.bold)
                 .foregroundStyle(.purple)
-            Text("新しく検出された語彙 \(candidateContent.vocabulary.count)語、文法 \(candidateContent.grammar.count)項目")
+            Text("Detected \(candidateContent.vocabulary.count) vocabulary words, \(candidateContent.grammar.count) grammar patterns")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -61,9 +61,9 @@ public struct ReanalysisReviewSheetView: View {
     }
 
     private var tabPicker: some View {
-        Picker("区分", selection: $selectedTab) {
-            Text("新出語彙 (\(candidateContent.vocabulary.count))").tag(ReviewTab.vocabulary)
-            Text("新出文法 (\(candidateContent.grammar.count))").tag(ReviewTab.grammar)
+        Picker("Category", selection: $selectedTab) {
+            Text("New Vocabulary (\(candidateContent.vocabulary.count))").tag(ReviewTab.vocabulary)
+            Text("New Grammar (\(candidateContent.grammar.count))").tag(ReviewTab.grammar)
         }
         .pickerStyle(.segmented)
         .padding()
@@ -175,7 +175,7 @@ public struct ReanalysisReviewSheetView: View {
     private var actionButtonsBar: some View {
         HStack(spacing: 12) {
             Button(action: handleReject) {
-                Label("破棄する", systemImage: "xmark")
+                Label("Reject", systemImage: "xmark")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }
@@ -183,7 +183,7 @@ public struct ReanalysisReviewSheetView: View {
             .tint(.red)
 
             Button(action: handleAccept) {
-                Label("新結果を適用", systemImage: "checkmark")
+                Label("Apply New Results", systemImage: "checkmark")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }

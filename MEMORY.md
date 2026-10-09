@@ -69,4 +69,5 @@
 - [x] Custom local AI server integration: configurable endpoint & API key with automatic model discovery from Ollama and OpenAI-compatible servers (`CustomAISettingsView`).
 - [x] Page Re-Analyze flow: send page text to locally hosted AI server instead of on-device AI, with interactive review sheet (`ReanalysisReviewSheetView`) to accept or reject results.
 - [x] Added Romaji transliteration and English translations for vocabulary items and daily life examples across cards, lists, study sheets, and re-analysis preview.
+- [x] Entire app UI localized into English: navigation bars, tab bars, buttons, empty states, search prompts, section headers, badges, alerts, settings, and re-analysis review flows.
 

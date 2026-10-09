@@ -4,7 +4,7 @@ import JapaneseLearningDomain
 public struct VocabularyListView: View {
     let items: [VocabularyItem]
     @State private var filterOnlyNew: Bool = false
-    @State private var selectedCategory: String = "すべて"
+    @State private var selectedCategory: String = "All"
     @State private var searchText: String = ""
     @State private var selectedItemForCard: VocabularyItem?
 
@@ -16,7 +16,7 @@ public struct VocabularyListView: View {
         var categories = Set(items.compactMap(\.category))
         categories.remove("General")
         var sorted = categories.sorted()
-        sorted.insert("すべて", at: 0)
+        sorted.insert("All", at: 0)
         return sorted
     }
 
@@ -27,7 +27,7 @@ public struct VocabularyListView: View {
                 categoryFilterRow
                 listContent
             }
-            .navigationTitle("語彙")
+            .navigationTitle("Vocabulary")
             .sheet(item: $selectedItemForCard) { item in
                 VocabularyCardView(item: item)
                     .presentationDetents([.medium])
@@ -36,9 +36,9 @@ public struct VocabularyListView: View {
     }
 
     private var filterPicker: some View {
-        Picker("フィルター", selection: $filterOnlyNew) {
-            Text("すべて (\(items.count))").tag(false)
-            Text("新出語のみ (\(newCount))").tag(true)
+        Picker("Filter", selection: $filterOnlyNew) {
+            Text("All (\(items.count))").tag(false)
+            Text("New Words Only (\(newCount))").tag(true)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal)
@@ -78,8 +78,8 @@ public struct VocabularyListView: View {
     private var filteredItems: [VocabularyItem] {
         items.filter { item in
             let matchesNew = !filterOnlyNew || item.isNewWord
-            let matchesCat = selectedCategory == "すべて" || item.category == selectedCategory
-            let matchesSearch = searchText.isEmpty || item.word.contains(searchText) || item.reading.contains(searchText)
+            let matchesCat = selectedCategory == "All" || item.category == selectedCategory
+            let matchesSearch = searchText.isEmpty || item.word.contains(searchText) || item.reading.contains(searchText) || item.meaning.localizedCaseInsensitiveContains(searchText)
             return matchesNew && matchesCat && matchesSearch
         }
     }
@@ -91,7 +91,7 @@ public struct VocabularyListView: View {
     }
 
     private var groupedSections: [VocabGroup] {
-        if selectedCategory == "すべて" {
+        if selectedCategory == "All" {
             return groupByLessonCategory()
         }
         return groupByPage()
@@ -99,7 +99,7 @@ public struct VocabularyListView: View {
 
     private func groupByLessonCategory() -> [VocabGroup] {
         let dict = Dictionary(grouping: filteredItems) { item in
-            item.category ?? "その他"
+            item.category ?? "General"
         }
         return dict.keys.sorted().map { key in
             VocabGroup(id: key, title: key, items: dict[key] ?? [])
@@ -108,7 +108,7 @@ public struct VocabularyListView: View {
 
     private func groupByPage() -> [VocabGroup] {
         let dict = Dictionary(grouping: filteredItems) { item in
-            item.pageCode.map { "Page \($0)" } ?? "その他"
+            item.pageCode.map { "Page \($0)" } ?? "Other"
         }
         return dict.keys.sorted().map { key in
             VocabGroup(id: key, title: key, items: dict[key] ?? [])
@@ -126,9 +126,9 @@ public struct VocabularyListView: View {
 
     private var emptyStateView: some View {
         ContentUnavailableView(
-            "語彙が見つかりません",
+            "No Vocabulary Found",
             systemImage: "character.book.closed",
-            description: Text(filterOnlyNew ? "新出語はありません。" : "レッスンをスキャンして語彙を抽出してください。")
+            description: Text(filterOnlyNew ? "No newly marked words in this category." : "Scan a lesson to extract vocabulary.")
         )
     }
 
@@ -145,7 +145,7 @@ public struct VocabularyListView: View {
                 }
             }
         }
-        .searchable(text: $searchText, prompt: "語彙を検索")
+        .searchable(text: $searchText, prompt: "Search vocabulary or meaning")
     }
 
     private func sectionHeaderView(title: String, count: Int) -> some View {
@@ -154,7 +154,7 @@ public struct VocabularyListView: View {
                 .font(.footnote)
                 .fontWeight(.bold)
             Spacer()
-            Text("\(count)語")
+            Text("\(count) words")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -207,7 +207,6 @@ public struct VocabularyListView: View {
         }
     }
 
-
     private func itemBadgeColumn(item: VocabularyItem) -> some View {
         VStack(alignment: .trailing, spacing: 4) {
             if let pageCode = item.pageCode {
@@ -219,7 +218,7 @@ public struct VocabularyListView: View {
                     .foregroundStyle(.blue)
                     .clipShape(Capsule())
             }
-            if let cat = item.category, cat != "General" && cat != "その他" {
+            if let cat = item.category, cat != "General" && cat != "Other" {
                 Text(cat)
                     .font(.caption2)
                     .padding(.horizontal, 6)
@@ -232,7 +231,7 @@ public struct VocabularyListView: View {
     }
 
     private var newBadge: some View {
-        Text("新")
+        Text("NEW")
             .font(.system(size: 10, weight: .heavy))
             .foregroundStyle(.white)
             .padding(.horizontal, 6)
