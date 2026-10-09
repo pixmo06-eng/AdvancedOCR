@@ -70,4 +70,5 @@
 - [x] Page Re-Analyze flow: send page text to locally hosted AI server instead of on-device AI, with interactive review sheet (`ReanalysisReviewSheetView`) to accept or reject results.
 - [x] Added Romaji transliteration and English translations for vocabulary items and daily life examples across cards, lists, study sheets, and re-analysis preview.
 - [x] Entire app UI localized into English: navigation bars, tab bars, buttons, empty states, search prompts, section headers, badges, alerts, settings, and re-analysis review flows.
+- [x] Promoted local custom AI endpoint setup to a dedicated first-class tab (`Local AI`) in `AdvancedOCRApp`, with adaptive modal and standalone tab presentation.
 

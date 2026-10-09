@@ -36,6 +36,7 @@ struct AdvancedOCRApp: App {
                 lessonsTab
                 vocabularyTab
                 grammarTab
+                localAITab
             }
         }
     }
@@ -61,5 +62,10 @@ struct AdvancedOCRApp: App {
             }
     }
 
-
+    private var localAITab: some View {
+        CustomAISettingsView(isModal: false)
+            .tabItem {
+                Label("Local AI", systemImage: "server.rack")
+            }
+    }
 }

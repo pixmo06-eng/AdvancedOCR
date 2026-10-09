@@ -12,17 +12,20 @@ public struct CustomAISettingsView: View {
     @State private var statusMessage: String?
     @State private var isError: Bool = false
 
+    private let isModal: Bool
     private let service: CustomLocalAIServiceProtocol
     private let onSaved: ((CustomAIConfiguration) -> Void)?
 
     public init(
         initialConfig: CustomAIConfiguration = CustomAIConfiguration.loadFromDefaults(),
+        isModal: Bool = false,
         service: CustomLocalAIServiceProtocol = CustomLocalAIService(),
         onSaved: ((CustomAIConfiguration) -> Void)? = nil
     ) {
         self._endpoint = State(initialValue: initialConfig.endpoint)
         self._apiKey = State(initialValue: initialConfig.apiKey)
         self._selectedModel = State(initialValue: initialConfig.selectedModel)
+        self.isModal = isModal
         self.service = service
         self.onSaved = onSaved
     }
@@ -37,7 +40,7 @@ public struct CustomAISettingsView: View {
             }
             .navigationTitle("Local AI Server Settings")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(isModal ? .inline : .automatic)
             #endif
             .toolbar { toolbarContent }
             .task {
@@ -118,8 +121,10 @@ public struct CustomAISettingsView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") { dismiss() }
+        if isModal {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
         }
         ToolbarItem(placement: .confirmationAction) {
             Button("Save") { saveSettings() }
@@ -156,6 +161,11 @@ public struct CustomAISettingsView: View {
         )
         config.saveToDefaults()
         onSaved?(config)
-        dismiss()
+        if isModal {
+            dismiss()
+        } else {
+            statusMessage = "Settings saved successfully ✓"
+            isError = false
+        }
     }
 }

@@ -49,7 +49,7 @@ public struct PageStudySheetView: View {
                     .presentationDetents([.medium])
             }
             .sheet(isPresented: $isShowingSettings) {
-                CustomAISettingsView()
+                CustomAISettingsView(isModal: true)
             }
             .sheet(isPresented: $isShowingReview) {
                 if let candidateContent {
