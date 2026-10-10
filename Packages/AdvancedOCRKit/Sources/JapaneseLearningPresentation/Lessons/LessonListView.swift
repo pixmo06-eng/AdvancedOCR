@@ -62,6 +62,9 @@ public struct LessonListView: View {
                     },
                     onUpdatePage: { updatedPage in
                         await viewModel.updatePage(lessonId: lesson.id, page: updatedPage)
+                    },
+                    onSplitPage: { lessonId, pageId in
+                        await viewModel.splitPageInLesson(lessonId: lessonId, pageId: pageId)
                     }
                 )) {
                     lessonRow(lesson: lesson)

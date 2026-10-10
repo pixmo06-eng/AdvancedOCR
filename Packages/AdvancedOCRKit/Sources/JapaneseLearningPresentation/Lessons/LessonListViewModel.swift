@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import Core
 import OCRDomain
+import OCRData
 import JapaneseLearningDomain
 
 @Observable
@@ -17,15 +18,18 @@ public final class LessonListViewModel {
     private let repository: LessonRepositoryProtocol
     private let ocrService: OCRServiceProtocol
     private let analyzeLessonUseCase: AnalyzeLessonUseCaseProtocol
+    private let spreadSplitter: PageSpreadSplitterProtocol
 
     public init(
         repository: LessonRepositoryProtocol,
         ocrService: OCRServiceProtocol,
-        analyzeLessonUseCase: AnalyzeLessonUseCaseProtocol
+        analyzeLessonUseCase: AnalyzeLessonUseCaseProtocol,
+        spreadSplitter: PageSpreadSplitterProtocol = PageSpreadSplitter()
     ) {
         self.repository = repository
         self.ocrService = ocrService
         self.analyzeLessonUseCase = analyzeLessonUseCase
+        self.spreadSplitter = spreadSplitter
     }
 
     public func loadData() async {
@@ -129,16 +133,66 @@ public final class LessonListViewModel {
         return merged
     }
 
+    /// Splits an existing 2-in-1 page spread within a lesson into two individual pages.
+    public func splitPageInLesson(lessonId: UUID, pageId: UUID) async -> Lesson? {
+        guard let lessonIndex = lessons.firstIndex(where: { $0.id == lessonId }),
+              let pageIndex = lessons[lessonIndex].pages.firstIndex(where: { $0.id == pageId }) else {
+            return nil
+        }
+        let targetPage = lessons[lessonIndex].pages[pageIndex]
+        guard spreadSplitter.isTwoPageSpread(imageData: targetPage.imageData) else {
+            return nil
+        }
+        let halves = spreadSplitter.splitSpread(imageData: targetPage.imageData)
+        guard halves.count == 2 else { return nil }
+
+        isProcessing = true
+        statusMessage = "Splitting 2-page spread..."
+        defer {
+            isProcessing = false
+            statusMessage = nil
+        }
+
+        do {
+            let splitPages = try await performOCROnPages(
+                pagesData: halves,
+                startIndex: pageIndex,
+                initialCategory: targetPage.category
+            )
+            let dummy = Lesson(id: lessonId, title: lessons[lessonIndex].title, pages: splitPages)
+            let analyzed = try await analyzeLessonUseCase.execute(lesson: dummy)
+
+            var updated = lessons[lessonIndex]
+            updated.pages.remove(at: pageIndex)
+            updated.pages.insert(contentsOf: analyzed.pages, at: pageIndex)
+            reindexPages(&updated.pages)
+
+            try await repository.saveLesson(updated)
+            for page in analyzed.pages {
+                try await repository.saveVocabularyItems(page.vocabulary)
+                try await repository.saveGrammarItems(page.grammar)
+            }
+            lessons[lessonIndex] = updated
+            vocabularyList = try await repository.fetchAllVocabulary()
+            grammarList = try await repository.fetchAllGrammar()
+            return updated
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
     private func performOCROnPages(
         pagesData: [Data],
         startIndex: Int = 0,
         initialCategory: String? = nil
     ) async throws -> [LessonPage] {
+        let expanded = expandSpreads(pagesData: pagesData)
         var pages: [LessonPage] = []
         var activeCategory: String? = initialCategory
         let parser = LessonHeaderParser()
 
-        for (offset, data) in pagesData.enumerated() {
+        for (offset, data) in expanded.enumerated() {
             let index = startIndex + offset
             let scanResult = try await ocrService.recognizeText(from: data)
             let header = parser.parse(text: scanResult.fullText, fallbackIndex: index, currentCategory: activeCategory)
@@ -156,6 +210,25 @@ public final class LessonListViewModel {
             pages.append(page)
         }
         return pages
+    }
+
+    private func expandSpreads(pagesData: [Data]) -> [Data] {
+        var expanded: [Data] = []
+        for data in pagesData {
+            if spreadSplitter.isTwoPageSpread(imageData: data) {
+                let halves = spreadSplitter.splitSpread(imageData: data)
+                expanded.append(contentsOf: halves)
+            } else {
+                expanded.append(data)
+            }
+        }
+        return expanded
+    }
+
+    private func reindexPages(_ pages: inout [LessonPage]) {
+        for index in pages.indices {
+            pages[index].pageIndex = index
+        }
     }
 
     private func resolveLessonTitle(givenTitle: String, pages: [LessonPage]) -> String {

@@ -73,9 +73,10 @@ public final class VisionOCRService: OCRServiceProtocol {
         guard let observations = request.results as? [VNRecognizedTextObservation] else {
             return .success(ScanResult(fullText: "", blocks: []))
         }
-        let blocks = observations.compactMap(self.mapObservation)
-        let fullText = blocks.map(\.text).joined(separator: "\n")
-        return .success(ScanResult(fullText: fullText, blocks: blocks))
+        let rawBlocks = observations.compactMap(self.mapObservation)
+        let sortedBlocks = TextLayoutSorter().sortBlocks(rawBlocks)
+        let fullText = sortedBlocks.map(\.text).joined(separator: "\n")
+        return .success(ScanResult(fullText: fullText, blocks: sortedBlocks))
     }
 
     private func mapObservation(_ observation: VNRecognizedTextObservation) -> RecognizedBlock? {

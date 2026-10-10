@@ -46,4 +46,16 @@ final class LessonHeaderParserTests: XCTestCase {
         XCTAssertEqual(result.category, "Kanji 2")
         XCTAssertEqual(result.title, "A 11a - Kanji 2")
     }
+
+    func testExtractAllPageCodes_withTwoPageCodesInSpread_extractsBoth() {
+        let parser = LessonHeaderParser()
+        let spreadText = """
+        Kumon Japanese A 1a Kanji 1
+        Left page content here.
+        Kumon Japanese A 1b Kanji 1
+        Right page content here.
+        """
+        let codes = parser.extractAllPageCodes(from: spreadText)
+        XCTAssertEqual(codes, ["A 1a", "A 1b"])
+    }
 }

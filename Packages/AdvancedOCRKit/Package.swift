@@ -43,11 +43,11 @@ let package = Package(
         ),
         .target(
             name: "JapaneseLearningPresentation",
-            dependencies: ["Core", "OCRDomain", "JapaneseLearningDomain", "JapaneseLearningData"]
+            dependencies: ["Core", "OCRDomain", "OCRData", "JapaneseLearningDomain", "JapaneseLearningData"]
         ),
         .testTarget(
             name: "OCRDomainTests",
-            dependencies: ["OCRDomain"]
+            dependencies: ["OCRDomain", "OCRData"]
         ),
         .testTarget(
             name: "JapaneseLearningDomainTests",

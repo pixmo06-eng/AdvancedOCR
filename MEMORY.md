@@ -72,4 +72,9 @@
 - [x] Entire app UI localized into English: navigation bars, tab bars, buttons, empty states, search prompts, section headers, badges, alerts, settings, and re-analysis review flows.
 - [x] Promoted local custom AI endpoint setup to a dedicated first-class tab (`Local AI`) in `AdvancedOCRApp`, with adaptive modal and standalone tab presentation.
 - [x] Fixed physical device connection error (-1009 Local network prohibited): configured `NSLocalNetworkUsageDescription`, `NSAppTransportSecurity` (allows local networking and arbitrary loads), and `NSBonjourServices` in `Info.plist` and `project.yml`.
+- [x] Two-page spread support & OCR line un-scrambling:
+  - `TextLayoutSorter`: Sorts OCR text blocks column-by-column (column 1 top-to-bottom then column 2 top-to-bottom) so sentences across spreads/columns are never interlaced.
+  - `PageSpreadSplitter`: Auto-detects 2-page spreads (landscape aspect ratio ≥ 1.05) and cleanly crops them into individual left and right page images with orientation normalization.
+  - Automatic spread expansion in `LessonListViewModel` during scan processing so each page half becomes its own distinct `LessonPage` with isolated OCR and AI vocabulary/grammar.
+  - "Split 2 Pages" on-demand action in `BookReaderView` allowing users to split any existing 2-in-1 page spread directly in the reader.
 

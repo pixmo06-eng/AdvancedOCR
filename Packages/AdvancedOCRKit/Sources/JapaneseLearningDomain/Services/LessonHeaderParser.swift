@@ -28,13 +28,23 @@ public struct LessonHeaderParser: Sendable {
         )
     }
 
-    private func extractPageCode(from text: String) -> String? {
+    public func extractAllPageCodes(from text: String) -> [String] {
         let pattern = #"(?i)\b([A-Z]\s*\d+\s*[a-b]?)\b"#
-        guard let match = text.range(of: pattern, options: .regularExpression) else {
-            return nil
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        var codes: [String] = []
+        for match in regex.matches(in: text, range: range) {
+            guard let r = Range(match.range(at: 1), in: text) else { continue }
+            let code = cleanPageCode(String(text[r]))
+            if !codes.contains(code) {
+                codes.append(code)
+            }
         }
-        let raw = String(text[match])
-        return cleanPageCode(raw)
+        return codes
+    }
+
+    private func extractPageCode(from text: String) -> String? {
+        extractAllPageCodes(from: text).first
     }
 
     private func cleanPageCode(_ raw: String) -> String {

@@ -1,4 +1,5 @@
 import SwiftUI
+import OCRData
 import JapaneseLearningDomain
 
 public struct BookReaderView: View {
@@ -7,25 +8,29 @@ public struct BookReaderView: View {
     let allGrammar: [GrammarItem]
     let onAddPages: ((UUID, [Data]) async -> Lesson?)?
     let onUpdatePage: ((LessonPage) async -> Void)?
+    let onSplitPage: ((UUID, UUID) async -> Lesson?)?
 
     @State private var selectedPageIndex: Int = 0
     @State private var showExtractedText: Bool = false
     @State private var showStudySheet: Bool = false
     @State private var showEditTextSheet: Bool = false
     @State private var showAddScanner: Bool = false
+    private let spreadSplitter = PageSpreadSplitter()
 
     public init(
         lesson: Lesson,
         allVocabulary: [VocabularyItem] = [],
         allGrammar: [GrammarItem] = [],
         onAddPages: ((UUID, [Data]) async -> Lesson?)? = nil,
-        onUpdatePage: ((LessonPage) async -> Void)? = nil
+        onUpdatePage: ((LessonPage) async -> Void)? = nil,
+        onSplitPage: ((UUID, UUID) async -> Lesson?)? = nil
     ) {
         self._lesson = State(initialValue: lesson)
         self.allVocabulary = allVocabulary
         self.allGrammar = allGrammar
         self.onAddPages = onAddPages
         self.onUpdatePage = onUpdatePage
+        self.onSplitPage = onSplitPage
     }
 
     private var currentPage: LessonPage? {
@@ -83,6 +88,9 @@ public struct BookReaderView: View {
         HStack {
             pageMetadataBadges
             Spacer()
+            if isCurrentPageSpread {
+                splitSpreadButton
+            }
             editTextButton
             studyPageButton
             textToggleSwitch
@@ -90,6 +98,29 @@ public struct BookReaderView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Color.secondary.opacity(0.08))
+    }
+
+    private var isCurrentPageSpread: Bool {
+        guard let page = currentPage, onSplitPage != nil else { return false }
+        return spreadSplitter.isTwoPageSpread(imageData: page.imageData)
+    }
+
+    private var splitSpreadButton: some View {
+        Button(action: splitCurrentPage) {
+            Label("Split 2 Pages", systemImage: "arrow.left.and.right.square")
+                .font(.footnote)
+                .fontWeight(.medium)
+        }
+        .buttonStyle(.bordered)
+        .tint(.orange)
+    }
+
+    private func splitCurrentPage() {
+        guard let page = currentPage, let onSplitPage else { return }
+        Task {
+            guard let updated = await onSplitPage(lesson.id, page.id) else { return }
+            lesson = updated
+        }
     }
 
     private var pageMetadataBadges: some View {
