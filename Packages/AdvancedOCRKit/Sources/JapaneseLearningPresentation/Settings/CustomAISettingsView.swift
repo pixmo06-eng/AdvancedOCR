@@ -146,11 +146,19 @@ public struct CustomAISettingsView: View {
             statusMessage = "Found \(fetched.count) models"
             isError = false
         } catch {
-            statusMessage = "Connection failed: Please check server URL"
+            statusMessage = formatErrorMessage(error)
             isError = true
         }
 
         isLoadingModels = false
+    }
+
+    private func formatErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        if nsError.code == -1009 {
+            return "Connection failed: Local network access required. Please check Local Network permission for AdvancedOCR in iOS Settings."
+        }
+        return "Connection failed: \(error.localizedDescription)"
     }
 
     private func saveSettings() {

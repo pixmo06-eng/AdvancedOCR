@@ -18,7 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1EB7EA131BFEFF8396256AEC /* AdvancedOCR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AdvancedOCR.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1EB7EA131BFEFF8396256AEC /* AdvancedOCR.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AdvancedOCR.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		41A4B70E138CD94EE0A1C372 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		824B55CF088AAF19C62CC9CC /* AdvancedOCRApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedOCRApp.swift; sourceTree = "<group>"; };
 		F7F1BF2270006378467E33BC /* AdvancedOCRKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AdvancedOCRKit; path = Packages/AdvancedOCRKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -61,6 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				824B55CF088AAF19C62CC9CC /* AdvancedOCRApp.swift */,
+				41A4B70E138CD94EE0A1C372 /* Info.plist */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -112,6 +114,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					DA37DDDAB4DB09173A0F98A7 = {
+						DevelopmentTeam = XTL75SVA5T;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -157,11 +160,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3NR3ZN5R55;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan Japanese lesson documents and extract text.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import lesson photos.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				DEVELOPMENT_TEAM = XTL75SVA5T;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -238,11 +239,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3NR3ZN5R55;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is needed to scan Japanese lesson documents and extract text.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is needed to import lesson photos.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				DEVELOPMENT_TEAM = XTL75SVA5T;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
