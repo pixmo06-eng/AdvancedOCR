@@ -81,19 +81,20 @@ public final class JapaneseNLPService: Sendable {
     }
 
     private func makeVocabularyItem(for word: String, partOfSpeech: String) -> VocabularyItem {
+        let definition = JapaneseDictionaryLookup.lookup(word: word) ?? word
         let exampleReading = "\(word)をつかいます。"
         let example = DailyLifeExample(
             japanese: "\(word)を使います。",
             reading: exampleReading,
             romaji: JapaneseRomajiConverter.toRomaji(from: exampleReading),
-            english: "Use \(word) in daily practice.",
+            english: "Using \"\(definition)\" in daily conversation.",
             scenario: "日常練習"
         )
         return VocabularyItem(
             word: word,
             reading: word,
             romaji: JapaneseRomajiConverter.toRomaji(from: word),
-            meaning: "Lesson word: \(word)",
+            meaning: definition,
             partOfSpeech: partOfSpeech,
             isNewWord: true,
             examples: [example]

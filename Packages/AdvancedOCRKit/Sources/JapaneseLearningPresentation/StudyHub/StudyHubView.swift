@@ -175,7 +175,7 @@ public struct StudyHubView: View {
                     Text(item.displayRomaji)
                         .font(.caption2)
                         .foregroundStyle(.purple)
-                    Text(item.meaning)
+                    Text(item.displayMeaning)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
@@ -287,7 +287,7 @@ public struct StudyHubView: View {
             let matchesSearch = searchText.isEmpty ||
                 item.word.contains(searchText) ||
                 item.reading.contains(searchText) ||
-                item.meaning.localizedCaseInsensitiveContains(searchText) ||
+                item.displayMeaning.localizedCaseInsensitiveContains(searchText) ||
                 item.displayRomaji.localizedCaseInsensitiveContains(searchText)
             return matchesCategory && matchesSearch
         }

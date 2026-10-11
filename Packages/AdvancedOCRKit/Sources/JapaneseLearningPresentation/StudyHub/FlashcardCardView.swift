@@ -89,7 +89,7 @@ public struct FlashcardCardView: View {
 
     private var meaningSection: some View {
         VStack(spacing: 4) {
-            Text(item.meaning)
+            Text(item.displayMeaning)
                 .font(.title3)
                 .fontWeight(.semibold)
                 .multilineTextAlignment(.center)
@@ -111,7 +111,7 @@ public struct FlashcardCardView: View {
                     .font(.caption2)
                     .foregroundStyle(.purple)
             }
-            Text(example.english)
+            Text(example.displayEnglish)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

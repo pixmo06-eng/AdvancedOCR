@@ -86,4 +86,9 @@
   - Built `SettingsView`: unified control panel for AI analysis engine preference (On-Device AI vs Custom Local AI server), Ollama/LM Studio endpoints, auto-split 2-page spreads toggle, and network diagnostics.
   - Polished `LessonListView`: book-shelf aesthetic with cover shadows, page count badges, and empty-state scan callout.
   - Expanded unit test suites to 34 tests (`StudyHubMasteryTests`, `LocalLessonRepositoryMasteryTests`), with 100% passing rate and clean Xcode iOS simulator builds.
+- [x] English Translation & Offline Dictionary Integration:
+  - Built `JapaneseDictionaryLookup`: fast, zero-dependency offline domain service covering elementary, Kumon, and JLPT Japanese Kanji/Hiragana/Katakana words, godan/ichidan verb inflections, and composite word definitions.
+  - Added dynamic fallback `VocabularyItem.displayMeaning` and `DailyLifeExample.displayEnglish`: replaces placeholder "Lesson word: \(word)" with true English definitions (e.g. にち -> "Day, Sun, Sunday"), and provides natural conversational English for generated examples.
+  - Refined `JapaneseRomajiConverter` to convert Japanese punctuation (ideographic full stop `。`, comma `、`) into standard Latin punctuation (`.`, `, `).
+  - Verified across 39 passing unit tests and deployed live to physical iPhone.
 

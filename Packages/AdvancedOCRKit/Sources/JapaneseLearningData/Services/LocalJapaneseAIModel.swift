@@ -221,34 +221,37 @@ public final class LocalJapaneseAIModel: LocalJapaneseAIProtocol {
     ]
 
     private func makeRoutineExample(for word: String) -> DailyLifeExample {
+        let meaning = JapaneseDictionaryLookup.lookup(word: word) ?? word
         let reading = "まいにちの せいかつで「\(word)」を よく つかいます。"
         return DailyLifeExample(
             japanese: "毎日の生活で「\(word)」をよく使います。",
             reading: reading,
             romaji: JapaneseRomajiConverter.toRomaji(from: reading),
-            english: "I often use \"\(word)\" in daily life.",
+            english: "I often use \"\(meaning)\" in daily life.",
             scenario: "日常生活"
         )
     }
 
     private func makeServiceExample(for word: String) -> DailyLifeExample {
+        let meaning = JapaneseDictionaryLookup.lookup(word: word) ?? word
         let reading = "おみせで「\(word)」について たずねました。"
         return DailyLifeExample(
             japanese: "お店で「\(word)」について尋ねました。",
             reading: reading,
             romaji: JapaneseRomajiConverter.toRomaji(from: reading),
-            english: "I asked about \"\(word)\" at the shop.",
+            english: "I asked about \"\(meaning)\" at the shop.",
             scenario: "買い物・店舗"
         )
     }
 
     private func makeConversationExample(for word: String) -> DailyLifeExample {
+        let meaning = JapaneseDictionaryLookup.lookup(word: word) ?? word
         let reading = "ともだちと いっしょに「\(word)」を はなしました。"
         return DailyLifeExample(
             japanese: "友達と一緒に「\(word)」を話しました。",
             reading: reading,
             romaji: JapaneseRomajiConverter.toRomaji(from: reading),
-            english: "I talked about \"\(word)\" with a friend.",
+            english: "I talked about \"\(meaning)\" with a friend.",
             scenario: "日常会話"
         )
     }

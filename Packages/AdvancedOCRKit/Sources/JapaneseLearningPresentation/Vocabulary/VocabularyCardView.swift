@@ -53,8 +53,8 @@ public struct VocabularyCardView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(.purple)
 
-            if !item.meaning.isEmpty {
-                Text(item.meaning)
+            if !item.displayMeaning.isEmpty {
+                Text(item.displayMeaning)
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -94,8 +94,8 @@ public struct VocabularyCardView: View {
                 .font(.subheadline)
                 .foregroundStyle(.purple)
 
-            if !item.meaning.isEmpty {
-                Text(item.meaning)
+            if !item.displayMeaning.isEmpty {
+                Text(item.displayMeaning)
                     .font(.headline)
                     .foregroundStyle(.primary)
             }
@@ -152,8 +152,8 @@ public struct VocabularyCardView: View {
                 .font(.caption2)
                 .foregroundStyle(.purple)
 
-            if !example.english.isEmpty {
-                Text(example.english)
+            if !example.displayEnglish.isEmpty {
+                Text(example.displayEnglish)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

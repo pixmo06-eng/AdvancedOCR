@@ -30,6 +30,22 @@ public struct VocabularyItem: Identifiable, Codable, Sendable, Equatable {
         return JapaneseRomajiConverter.toRomaji(from: source)
     }
 
+    public var displayMeaning: String {
+        if !meaning.isEmpty && !meaning.hasPrefix("Lesson word:") && !meaning.hasPrefix("Word:") {
+            return meaning
+        }
+        if let translation = JapaneseDictionaryLookup.lookup(word: word) {
+            return translation
+        }
+        if !reading.isEmpty, let translation = JapaneseDictionaryLookup.lookup(word: reading) {
+            return translation
+        }
+        if !meaning.isEmpty {
+            return meaning.replacingOccurrences(of: "Lesson word: ", with: "")
+        }
+        return word
+    }
+
     public init(
         id: UUID = UUID(),
         word: String,

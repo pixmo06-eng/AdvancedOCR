@@ -172,8 +172,8 @@ public struct PageStudySheetView: View {
                     Text(item.displayRomaji)
                         .font(.caption2)
                         .foregroundStyle(.purple)
-                    if !item.meaning.isEmpty {
-                        Text(item.meaning).font(.footnote).foregroundStyle(.secondary)
+                    if !item.displayMeaning.isEmpty {
+                        Text(item.displayMeaning).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
             }

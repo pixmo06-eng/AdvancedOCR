@@ -14,6 +14,19 @@ public struct DailyLifeExample: Identifiable, Codable, Sendable, Equatable {
         return JapaneseRomajiConverter.toRomaji(from: source)
     }
 
+    public var displayEnglish: String {
+        if !english.isEmpty && !english.contains("in daily practice") && !english.contains("Example using") {
+            return english
+        }
+        let cleanJapanese = japanese
+            .replacingOccurrences(of: "を使います。", with: "")
+            .replacingOccurrences(of: "を使います", with: "")
+        if let translated = JapaneseDictionaryLookup.lookup(word: cleanJapanese) {
+            return "Using \"\(translated)\" in daily conversation."
+        }
+        return english
+    }
+
     public init(
         id: UUID = UUID(),
         japanese: String,
