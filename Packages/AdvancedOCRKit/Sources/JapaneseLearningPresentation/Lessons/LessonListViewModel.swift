@@ -90,6 +90,52 @@ public final class LessonListViewModel {
         }
     }
 
+    public func updateVocabularyMastery(item: VocabularyItem, status: MasteryStatus) async {
+        guard let index = vocabularyList.firstIndex(where: { $0.id == item.id || $0.word == item.word }) else {
+            return
+        }
+        vocabularyList[index].masteryStatus = status
+        if status == .mastered {
+            vocabularyList[index].isNewWord = false
+        }
+        do {
+            try await repository.saveVocabularyItems([vocabularyList[index]])
+            try await syncMasteryToLessons(item: item, status: status)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func syncMasteryToLessons(item: VocabularyItem, status: MasteryStatus) async throws {
+        for (idx, _) in lessons.enumerated() {
+            guard let updatedPages = updatePagesWithMastery(lessons[idx].pages, item: item, status: status) else {
+                continue
+            }
+            lessons[idx].pages = updatedPages
+            try await repository.saveLesson(lessons[idx])
+        }
+    }
+
+    private func updatePagesWithMastery(
+        _ pages: [LessonPage],
+        item: VocabularyItem,
+        status: MasteryStatus
+    ) -> [LessonPage]? {
+        var updated = pages
+        var changed = false
+        for (pIdx, page) in pages.enumerated() {
+            guard let vIdx = page.vocabulary.firstIndex(where: { $0.id == item.id || $0.word == item.word }) else {
+                continue
+            }
+            updated[pIdx].vocabulary[vIdx].masteryStatus = status
+            if status == .mastered {
+                updated[pIdx].vocabulary[vIdx].isNewWord = false
+            }
+            changed = true
+        }
+        return changed ? updated : nil
+    }
+
     /// Appends newly scanned pages to an existing lesson and returns the updated lesson.
     public func appendPages(to lessonId: UUID, pagesData: [Data]) async -> Lesson? {
         guard !pagesData.isEmpty,
@@ -213,6 +259,8 @@ public final class LessonListViewModel {
     }
 
     private func expandSpreads(pagesData: [Data]) -> [Data] {
+        let shouldAutoSplit = UserDefaults.standard.object(forKey: "auto_split_two_page_spreads") as? Bool ?? true
+        guard shouldAutoSplit else { return pagesData }
         var expanded: [Data] = []
         for data in pagesData {
             if spreadSplitter.isTwoPageSpread(imageData: data) {

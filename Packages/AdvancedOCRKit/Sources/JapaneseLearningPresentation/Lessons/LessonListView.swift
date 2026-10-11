@@ -15,7 +15,7 @@ public struct LessonListView: View {
     public var body: some View {
         NavigationStack {
             mainContent
-                .navigationTitle("Lessons")
+                .navigationTitle("Library")
                 .toolbar { toolbarContent }
                 .sheet(isPresented: $isShowingScanner) {
                     DocumentCameraScannerView(
@@ -43,11 +43,21 @@ public struct LessonListView: View {
     }
 
     private var emptyStateView: some View {
-        ContentUnavailableView(
-            "No Hard-Copy Lessons Yet",
-            systemImage: "doc.viewfinder",
-            description: Text("Tap '+' to scan lesson pages from your textbook or handouts.")
-        )
+        VStack(spacing: 16) {
+            ContentUnavailableView(
+                "Your Japanese Library is Empty",
+                systemImage: "books.vertical",
+                description: Text("Scan textbook pages or handouts using your camera to create your first lesson.")
+            )
+            Button(action: { isShowingScanner = true }) {
+                Label("Scan First Lesson", systemImage: "doc.viewfinder")
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.purple)
+        }
     }
 
     private var lessonsList: some View {
@@ -72,20 +82,35 @@ public struct LessonListView: View {
             }
             .onDelete(perform: deleteLesson)
         }
+        #if os(iOS)
+        .listStyle(.insetGrouped)
+        #endif
     }
 
     private func lessonRow(lesson: Lesson) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             lessonThumbnail(lesson: lesson)
             VStack(alignment: .leading, spacing: 4) {
                 Text(lesson.title)
                     .font(.headline)
-                Text("\(lesson.pages.count) Pages • \(lesson.createdAt.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text("\(lesson.pages.count) Pages")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.purple.opacity(0.12))
+                        .foregroundStyle(.purple)
+                        .clipShape(Capsule())
+
+                    Text(lesson.createdAt.formatted(date: .abbreviated, time: .omitted))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 
     private func lessonThumbnail(lesson: Lesson) -> some View {
@@ -97,7 +122,7 @@ public struct LessonListView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Color.secondary.opacity(0.2)
+                Color.secondary.opacity(0.15)
             }
             #elseif canImport(AppKit)
             if let firstPage = lesson.pages.first,
@@ -106,12 +131,13 @@ public struct LessonListView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Color.secondary.opacity(0.2)
+                Color.secondary.opacity(0.15)
             }
             #endif
         }
-        .frame(width: 48, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .frame(width: 52, height: 68)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1)
     }
 
     @ToolbarContentBuilder

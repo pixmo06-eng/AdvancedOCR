@@ -77,4 +77,13 @@
   - `PageSpreadSplitter`: Auto-detects 2-page spreads (landscape aspect ratio ≥ 1.05) and cleanly crops them into individual left and right page images with orientation normalization.
   - Automatic spread expansion in `LessonListViewModel` during scan processing so each page half becomes its own distinct `LessonPage` with isolated OCR and AI vocabulary/grammar.
   - "Split 2 Pages" on-demand action in `BookReaderView` allowing users to split any existing 2-in-1 page spread directly in the reader.
+- [x] App Redesign & UX Simplification:
+  - Consolidated 4 tabs into high-impact **3-Tab Architecture**: `📚 Library`, `⛩️ Study Hub`, and `⚙️ Settings`.
+  - Redesigned `BookReaderView`: eliminated header button clutter by introducing an overflow `...` Menu (Edit Text, Split Spread, Add Pages), a floating bottom frosted-glass toggle `[ 🖼️ Image | 📄 Text ]`, and a docked bottom **Study Companion Bar** (`✨ X Words • Y Grammar — Tap to Study`).
+  - Refactored `PageStudySheetView`: removed redundant sheet-in-sheet settings button, added inline word mastery actions, and unified re-analysis to automatically use the active AI engine configured in Settings.
+  - Built `StudyHubView`: unified vocabulary and grammar learning center featuring real-time mastery counts (`Mastered`, `Learning`, `New`), category/mastery filtering, and an instant "Start Flashcard Practice" mode.
+  - Implemented `FlashcardSessionView` & `FlashcardCardView`: 3D card flipping, full Romaji + English + real-world example sentences, and interactive mastery tracking (`Review Again` vs `Mastered`) persisted directly to `LocalLessonRepository`.
+  - Built `SettingsView`: unified control panel for AI analysis engine preference (On-Device AI vs Custom Local AI server), Ollama/LM Studio endpoints, auto-split 2-page spreads toggle, and network diagnostics.
+  - Polished `LessonListView`: book-shelf aesthetic with cover shadows, page count badges, and empty-state scan callout.
+  - Expanded unit test suites to 34 tests (`StudyHubMasteryTests`, `LocalLessonRepositoryMasteryTests`), with 100% passing rate and clean Xcode iOS simulator builds.
 

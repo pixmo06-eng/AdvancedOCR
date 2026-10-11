@@ -3,6 +3,7 @@ import JapaneseLearningDomain
 import JapaneseLearningData
 
 public struct PageStudySheetView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var page: LessonPage
     private let onPageUpdated: ((LessonPage) async -> Void)?
 
@@ -12,7 +13,6 @@ public struct PageStudySheetView: View {
     @State private var pageGrammar: [GrammarItem] = []
     @State private var isLoading: Bool = false
     @State private var isReanalyzing: Bool = false
-    @State private var isShowingSettings: Bool = false
     @State private var isShowingReview: Bool = false
     @State private var candidateContent: ExtractedStudyContent?
     @State private var errorMessage: String?
@@ -48,9 +48,6 @@ public struct PageStudySheetView: View {
                 VocabularyCardView(item: updatedItemWithAI(item))
                     .presentationDetents([.medium])
             }
-            .sheet(isPresented: $isShowingSettings) {
-                CustomAISettingsView(isModal: true)
-            }
             .sheet(isPresented: $isShowingReview) {
                 if let candidateContent {
                     ReanalysisReviewSheetView(
@@ -62,7 +59,7 @@ public struct PageStudySheetView: View {
                     )
                 }
             }
-            .alert("Error", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            .alert("Notice", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
                 Button("OK") { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "")
@@ -99,13 +96,13 @@ public struct PageStudySheetView: View {
         Button(action: { Task { await triggerReanalysis() } }) {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                Text(isReanalyzing ? "Re-analyzing..." : "Re-Analyze (Custom AI)")
+                Text(isReanalyzing ? "Re-analyzing..." : "Re-Analyze Page")
             }
-            .font(.caption2)
-            .fontWeight(.bold)
+            .font(.caption)
+            .fontWeight(.semibold)
             .foregroundStyle(.purple)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
             .background(Color.purple.opacity(0.12))
             .clipShape(Capsule())
         }
@@ -142,7 +139,7 @@ public struct PageStudySheetView: View {
     private var loadingView: some View {
         VStack(spacing: 12) {
             ProgressView()
-            Text(isReanalyzing ? "Re-analyzing with local AI server..." : "Analyzing page text...")
+            Text(isReanalyzing ? "Re-analyzing with AI..." : "Analyzing page text...")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -152,7 +149,7 @@ public struct PageStudySheetView: View {
     private var vocabList: some View {
         List(pageVocabulary) { item in
             VStack(alignment: .leading, spacing: 6) {
-                vocabRowButton(item: item)
+                vocabRow(item: item)
                 aiSentenceButton(item: item)
             }
             .padding(.vertical, 4)
@@ -164,9 +161,9 @@ public struct PageStudySheetView: View {
         }
     }
 
-    private func vocabRowButton(item: VocabularyItem) -> some View {
-        Button(action: { selectedCardItem = item }) {
-            HStack {
+    private func vocabRow(item: VocabularyItem) -> some View {
+        HStack {
+            Button(action: { selectedCardItem = item }) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.word).font(.headline)
                     if !item.reading.isEmpty && item.reading != item.word {
@@ -179,13 +176,56 @@ public struct PageStudySheetView: View {
                         Text(item.meaning).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
-                Spacer()
-                if item.isNewWord {
-                    newBadge
-                }
             }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            masteryMenu(for: item)
         }
-        .buttonStyle(.plain)
+    }
+
+    private func masteryMenu(for item: VocabularyItem) -> some View {
+        Menu {
+            Button("Mastered") { updateItemMastery(item: item, status: .mastered) }
+            Button("Learning") { updateItemMastery(item: item, status: .learning) }
+            Button("New") { updateItemMastery(item: item, status: .newWord) }
+        } label: {
+            masteryBadge(for: item.masteryStatus)
+        }
+    }
+
+    private func masteryBadge(for status: MasteryStatus) -> some View {
+        let (color, icon): (Color, String) = switch status {
+        case .mastered: (.green, "checkmark.circle.fill")
+        case .learning: (.orange, "arrow.triangle.2.circlepath")
+        case .newWord: (.blue, "sparkle")
+        }
+        return HStack(spacing: 4) {
+            Image(systemName: icon)
+            Text(status.rawValue)
+        }
+        .font(.caption2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.12))
+        .foregroundStyle(color)
+        .clipShape(Capsule())
+    }
+
+    private func updateItemMastery(item: VocabularyItem, status: MasteryStatus) {
+        guard let index = pageVocabulary.firstIndex(where: { $0.id == item.id }) else { return }
+        pageVocabulary[index].masteryStatus = status
+        if status == .mastered {
+            pageVocabulary[index].isNewWord = false
+        }
+        var updatedPage = page
+        updatedPage.vocabulary = pageVocabulary
+        page = updatedPage
+        Task {
+            await onPageUpdated?(updatedPage)
+        }
     }
 
     private func aiSentenceButton(item: VocabularyItem) -> some View {
@@ -220,26 +260,27 @@ public struct PageStudySheetView: View {
         }
     }
 
-
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
-            HStack(spacing: 8) {
-                Button(action: { isShowingSettings = true }) {
-                    Image(systemName: "gearshape")
-                }
-                Button(action: { Task { await forceReextractOnDevice() } }) {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .disabled(isLoading || isReanalyzing)
-            }
+        ToolbarItem(placement: .confirmationAction) {
+            Button("Done") { dismiss() }
+                .fontWeight(.semibold)
         }
     }
 
     private func triggerReanalysis() async {
+        let useCustomAI = UserDefaults.standard.bool(forKey: "use_custom_local_ai")
+        if useCustomAI {
+            await triggerCustomAIReanalysis()
+            return
+        }
+        await forceReextractOnDevice()
+    }
+
+    private func triggerCustomAIReanalysis() async {
         let config = CustomAIConfiguration.loadFromDefaults()
         guard !config.selectedModel.isEmpty else {
-            isShowingSettings = true
+            errorMessage = "Please configure your Local AI server in the Settings tab."
             return
         }
 
@@ -360,15 +401,5 @@ public struct PageStudySheetView: View {
             category: updated.category,
             createdAt: updated.createdAt
         )
-    }
-
-    private var newBadge: some View {
-        Text("NEW")
-            .font(.system(size: 10, weight: .heavy))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(Color.red)
-            .clipShape(Capsule())
     }
 }

@@ -33,39 +33,37 @@ struct AdvancedOCRApp: App {
     var body: some Scene {
         WindowGroup {
             TabView {
-                lessonsTab
-                vocabularyTab
-                grammarTab
-                localAITab
+                libraryTab
+                studyHubTab
+                settingsTab
             }
         }
     }
 
-    private var lessonsTab: some View {
+    private var libraryTab: some View {
         LessonListView(viewModel: lessonViewModel)
             .tabItem {
-                Label("Lessons", systemImage: "book.pages")
+                Label("Library", systemImage: "book.closed.fill")
             }
     }
 
-    private var vocabularyTab: some View {
-        VocabularyListView(items: lessonViewModel.vocabularyList)
-            .tabItem {
-                Label("Vocabulary", systemImage: "character.book.closed")
+    private var studyHubTab: some View {
+        StudyHubView(
+            vocabulary: lessonViewModel.vocabularyList,
+            grammar: lessonViewModel.grammarList,
+            onUpdateVocabularyMastery: { item, status in
+                await lessonViewModel.updateVocabularyMastery(item: item, status: status)
             }
+        )
+        .tabItem {
+            Label("Study Hub", systemImage: "sparkles.rectangle.stack.fill")
+        }
     }
 
-    private var grammarTab: some View {
-        GrammarListView(items: lessonViewModel.grammarList)
+    private var settingsTab: some View {
+        SettingsView()
             .tabItem {
-                Label("Grammar", systemImage: "text.book.closed")
-            }
-    }
-
-    private var localAITab: some View {
-        CustomAISettingsView(isModal: false)
-            .tabItem {
-                Label("Local AI", systemImage: "server.rack")
+                Label("Settings", systemImage: "gearshape.fill")
             }
     }
 }
