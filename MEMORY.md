@@ -91,4 +91,8 @@
   - Added dynamic fallback `VocabularyItem.displayMeaning` and `DailyLifeExample.displayEnglish`: replaces placeholder "Lesson word: \(word)" with true English definitions (e.g. にち -> "Day, Sun, Sunday"), and provides natural conversational English for generated examples.
   - Refined `JapaneseRomajiConverter` to convert Japanese punctuation (ideographic full stop `。`, comma `、`) into standard Latin punctuation (`.`, `, `).
   - Verified across 39 passing unit tests and deployed live to physical iPhone.
+- [x] App Icon Design & Integration:
+  - Designed custom app icon featuring a luminous neon Japanese Kanji character 「学」 (learning) inside glowing optical camera/scanner viewfinder brackets with indigo/violet ambient illumination.
+  - Configured 1024x1024 universal icon asset in `App/Assets.xcassets/AppIcon.appiconset`.
+  - Built and deployed updated app icon to Pixmo's iPhone.
 
